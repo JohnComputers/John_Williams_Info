@@ -1,4 +1,27 @@
 <!DOCTYPE html>
+<!--
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  COMMAND CENTER · Personal dashboard · GitHub Pages build                │
+  │                                                                          │
+  │  DEFAULT PASSWORD: admin                                                 │
+  │                                                                          │
+  │  HOW IT WORKS                                                            │
+  │  ────────────                                                            │
+  │  1. Drop this file into your GitHub repo as `index.html` and enable      │
+  │     Pages (Settings > Pages > Branch: main / root).                      │
+  │  2. Visit your site. Visitors see a read-only dashboard.                 │
+  │  3. Press Ctrl+Shift+E, enter the password. You're in admin mode.        │
+  │  4. Edit anything. Your changes are cached locally in your browser       │
+  │     (not visible to others yet — you'll see a DRAFT indicator).          │
+  │  5. When happy, open Settings > Publish Site. It downloads a new         │
+  │     index.html with your edits + password baked in.                      │
+  │  6. Replace the file in your GitHub repo. Done.                          │
+  │                                                                          │
+  │  To change the password: admin > Settings > Change Password > Publish.   │
+  │  To reset everything:    admin > Settings > Discard Draft (or           │
+  │                          delete localStorage for this site).             │
+  └──────────────────────────────────────────────────────────────────────────┘
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -116,6 +139,18 @@
 
   .mode-indicator { font-weight: 500; }
   .mode-indicator.admin { color: var(--warning); }
+
+  .draft-badge {
+    display: none;
+    padding: 2px 8px;
+    background: rgba(255, 181, 71, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(255, 181, 71, 0.3);
+    border-radius: var(--radius);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .has-draft .draft-badge { display: inline-flex; }
 
   /* ============ CONTAINER ============ */
   .container {
@@ -282,16 +317,7 @@
   }
   .tab.active .tab-count { color: var(--accent); background: var(--accent-glow); }
 
-  .tab-drag-handle {
-    display: none;
-    color: var(--text-ghost);
-    font-size: 10px;
-    cursor: grab;
-  }
-  .admin-mode .tab-drag-handle { display: inline; }
-  .admin-mode .tab { position: relative; }
-  .admin-mode .tab .tab-edit-btn,
-  .admin-mode .tab .tab-delete-btn {
+  .admin-mode .tab .tab-edit-btn {
     opacity: 0;
     display: inline-flex;
     padding: 2px;
@@ -299,10 +325,8 @@
     transition: opacity 0.2s;
     font-size: 10px;
   }
-  .admin-mode .tab:hover .tab-edit-btn,
-  .admin-mode .tab:hover .tab-delete-btn { opacity: 1; }
+  .admin-mode .tab:hover .tab-edit-btn { opacity: 1; }
   .tab-edit-btn:hover { color: var(--accent); }
-  .tab-delete-btn:hover { color: var(--danger); }
 
   .tab-add {
     display: none;
@@ -379,6 +403,8 @@
   .btn.ghost:hover { border-color: var(--border); background: var(--bg-elevated); }
   .btn.danger { color: var(--danger); border-color: transparent; }
   .btn.danger:hover { background: var(--danger-glow); border-color: var(--danger); }
+  .btn.warn { color: var(--warning); border-color: rgba(255, 181, 71, 0.3); }
+  .btn.warn:hover { background: rgba(255, 181, 71, 0.1); }
 
   .admin-only { display: none; }
   .admin-mode .admin-only { display: inline-flex; }
@@ -473,8 +499,7 @@
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
-  .item-url { truncate: ellipsis; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
-  .item-clicks { color: var(--text-ghost); }
+  .item-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
   .item-clicks.hot { color: var(--accent); }
 
   .item-actions {
@@ -761,28 +786,6 @@
     font-size: 13px;
   }
 
-  /* ============ WELCOME / SETUP ============ */
-  .welcome {
-    max-width: 480px;
-    margin: 80px auto;
-    padding: 40px;
-    text-align: center;
-    position: relative; z-index: 1;
-  }
-  .welcome h1 {
-    font-family: var(--font-serif);
-    font-style: italic;
-    font-size: 56px;
-    margin-bottom: 12px;
-    line-height: 1;
-  }
-  .welcome p {
-    color: var(--text-dim);
-    font-size: 14px;
-    margin-bottom: 32px;
-  }
-  .welcome .field-input { text-align: center; font-size: 15px; padding: 14px; }
-
   /* ============ NOTIFICATIONS ============ */
   .toast-container {
     position: fixed; bottom: 24px; right: 24px; z-index: 2000;
@@ -797,6 +800,7 @@
     font-size: 12px;
     color: var(--text);
     min-width: 240px;
+    max-width: 400px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     animation: toastIn 0.25s var(--ease);
   }
@@ -852,7 +856,28 @@
     gap: 16px;
   }
   .settings-row-label { font-size: 13px; color: var(--text); }
-  .settings-row-desc { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+  .settings-row-desc { font-size: 11px; color: var(--text-faint); margin-top: 2px; line-height: 1.5; }
+
+  .publish-card {
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent-glow), transparent);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+  }
+  .publish-card-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .publish-card-desc {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
 
   /* ============ NOTES ============ */
   .notes-textarea {
@@ -892,6 +917,7 @@
   <div class="status-left">
     <span class="status-dot" id="status-dot"></span>
     <span class="mode-indicator" id="mode-indicator">VIEW MODE</span>
+    <span class="draft-badge" title="You have unpublished changes">● DRAFT</span>
     <span class="status-btn admin-only essential" id="exit-admin-btn" title="Exit admin (Esc)">
       ↩ EXIT ADMIN
     </span>
@@ -913,23 +939,6 @@
 </div>
 
 <!-- ============ MODALS ============ -->
-<div class="modal" id="welcome-modal">
-  <div class="modal-content">
-    <div class="modal-body welcome">
-      <h1>Welcome<span style="color:var(--accent)">.</span></h1>
-      <p>Set a master password. You'll use this to unlock admin mode and edit your command center. This stays on your device.</p>
-      <div class="field">
-        <input type="password" id="welcome-pass1" class="field-input" placeholder="Master password" autocomplete="new-password" />
-      </div>
-      <div class="field">
-        <input type="password" id="welcome-pass2" class="field-input" placeholder="Confirm password" autocomplete="new-password" />
-      </div>
-      <button class="btn primary" id="welcome-submit" style="width: 100%; padding: 14px; justify-content: center;">INITIALIZE →</button>
-      <div class="field-hint" style="margin-top: 16px;">This is a soft lock — it hides the edit UI. Anyone with local storage access could bypass it. Pick something memorable.</div>
-    </div>
-  </div>
-</div>
-
 <div class="modal" id="password-modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -1088,11 +1097,21 @@
     <div class="modal-header">
       <div>
         <div class="modal-title">Configuration</div>
-        <div class="modal-subtitle">Settings · Theme · Data</div>
+        <div class="modal-subtitle">Settings · Theme · Publishing</div>
       </div>
       <button class="modal-close" data-close>×</button>
     </div>
     <div class="modal-body">
+      <!-- PUBLISH CARD (admin only, visible only when draft exists) -->
+      <div class="publish-card admin-only" id="publish-card" style="display:none;">
+        <div class="publish-card-title">You have unpublished changes</div>
+        <div class="publish-card-desc">Download an updated <code style="color:var(--accent);">index.html</code> with your current dashboard + password baked in. Replace the file in your GitHub repo to publish.</div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn primary" id="btn-publish">◆ PUBLISH SITE</button>
+          <button class="btn warn" id="btn-discard-draft">DISCARD DRAFT</button>
+        </div>
+      </div>
+
       <div class="settings-section">
         <div class="settings-section-title">Appearance</div>
         <div class="settings-row">
@@ -1103,25 +1122,9 @@
           <div class="color-picker-wrap" id="theme-color-picker"></div>
         </div>
       </div>
-      <div class="settings-section admin-only" style="display: none;">
-        <div class="settings-section-title">Security</div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-row-label">Change Password</div>
-            <div class="settings-row-desc">Set a new master password</div>
-          </div>
-          <button class="btn" id="btn-change-password">CHANGE</button>
-        </div>
-        <div class="settings-row">
-          <div>
-            <div class="settings-row-label">Quick Notes</div>
-            <div class="settings-row-desc">Scratchpad — admin only</div>
-          </div>
-          <button class="btn" id="btn-open-notes">OPEN →</button>
-        </div>
-      </div>
-      <div class="settings-section admin-only" style="display: none;">
-        <div class="settings-section-title">Profile</div>
+
+      <div class="settings-section admin-only" style="display:none;">
+        <div class="settings-section-title">Profile &amp; Security</div>
         <div class="settings-row">
           <div>
             <div class="settings-row-label">Edit Profile</div>
@@ -1129,40 +1132,49 @@
           </div>
           <button class="btn" id="btn-edit-profile">EDIT →</button>
         </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Change Password</div>
+            <div class="settings-row-desc">Updates only after you publish</div>
+          </div>
+          <button class="btn" id="btn-change-password">CHANGE</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Quick Notes</div>
+            <div class="settings-row-desc">Scratchpad — stays in your browser</div>
+          </div>
+          <button class="btn" id="btn-open-notes">OPEN →</button>
+        </div>
       </div>
+
       <div class="settings-section">
         <div class="settings-section-title">Data</div>
         <div class="settings-row">
           <div>
-            <div class="settings-row-label">Export Backup</div>
-            <div class="settings-row-desc">Download your entire dashboard as JSON</div>
+            <div class="settings-row-label">Export Backup (JSON)</div>
+            <div class="settings-row-desc">Download your data as JSON for backup</div>
           </div>
           <button class="btn" id="btn-export">EXPORT</button>
         </div>
         <div class="settings-row admin-only" style="display:none;">
           <div>
-            <div class="settings-row-label">Import Backup</div>
-            <div class="settings-row-desc">Restore from JSON file — overwrites current data</div>
+            <div class="settings-row-label">Import Backup (JSON)</div>
+            <div class="settings-row-desc">Restore from JSON — creates a draft</div>
           </div>
           <button class="btn" id="btn-import">IMPORT</button>
           <input type="file" id="import-file" accept=".json" style="display:none;" />
         </div>
-        <div class="settings-row admin-only" style="display:none;">
-          <div>
-            <div class="settings-row-label" style="color: var(--danger);">Reset Everything</div>
-            <div class="settings-row-desc">Wipe all data and start over</div>
-          </div>
-          <button class="btn danger" id="btn-reset">RESET</button>
-        </div>
       </div>
+
       <div class="settings-section">
         <div class="settings-section-title">About</div>
         <div class="settings-row">
           <div>
             <div class="settings-row-label">Command Center</div>
-            <div class="settings-row-desc">Personal dashboard · Data persists in your browser</div>
+            <div class="settings-row-desc">Personal dashboard · GitHub Pages build</div>
           </div>
-          <div style="font-size:10px; color:var(--text-ghost); letter-spacing:0.1em;">v1.0</div>
+          <div style="font-size:10px; color:var(--text-ghost); letter-spacing:0.1em;">v1.1</div>
         </div>
       </div>
     </div>
@@ -1208,7 +1220,7 @@
     <div class="modal-header">
       <div>
         <div class="modal-title">Change Password</div>
-        <div class="modal-subtitle">Update master password</div>
+        <div class="modal-subtitle">New password activates after publishing</div>
       </div>
       <button class="modal-close" data-close>×</button>
     </div>
@@ -1237,15 +1249,81 @@
 
 <script>
 // ============================================================
-// COMMAND CENTER
-// A personal, password-locked dashboard with persistent storage.
+// COMMAND CENTER · GitHub Pages build
+// ============================================================
+// The PUBLISHED_CONFIG block below is what visitors see.
+// Edit in admin mode, then use Settings > Publish Site to
+// download a new index.html with your changes baked in.
+// Default password: "admin" (change it in admin settings, then publish).
 // ============================================================
 
+/* BEGIN_PUBLISHED_CONFIG */
+const PUBLISHED_PASSWORD_HASH = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
+const PUBLISHED_DATA = {
+  "profile": {
+    "name": "John",
+    "bio": "Developer · Builder · Independent",
+    "avatar": "",
+    "socials": [
+      { "name": "GitHub", "url": "https://github.com", "icon": "◆" }
+    ]
+  },
+  "theme": { "accent": "#00e5a0" },
+  "tabs": [
+    {
+      "id": "tab-home",
+      "name": "Home",
+      "icon": "⌂",
+      "items": [
+        { "id": "i-gmail", "type": "link", "title": "Gmail", "url": "https://mail.google.com", "description": "Inbox zero, always.", "icon": "✉", "color": "#4dabff", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-cal", "type": "link", "title": "Calendar", "url": "https://calendar.google.com", "description": "Time blocks and deep work.", "icon": "◐", "color": "#ff6bd6", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-about", "type": "note", "title": "About Me", "url": "", "description": "Independent developer focused on building tools and AI-powered workflows. Edit in admin mode to customize this dashboard.", "icon": "❐", "color": "#00e5a0", "clicks": 0, "pinned": true, "addedAt": 0 }
+      ]
+    },
+    {
+      "id": "tab-dev",
+      "name": "Dev",
+      "icon": "⚡",
+      "items": [
+        { "id": "i-gh", "type": "link", "title": "GitHub", "url": "https://github.com", "description": "Repositories and code.", "icon": "◆", "color": "#00e5a0", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-mdn", "type": "link", "title": "MDN Web Docs", "url": "https://developer.mozilla.org", "description": "The reference for the web.", "icon": "◈", "color": "#4dabff", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-so", "type": "link", "title": "Stack Overflow", "url": "https://stackoverflow.com", "description": "When in doubt.", "icon": "▲", "color": "#ffb547", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-fb", "type": "link", "title": "Firebase Console", "url": "https://console.firebase.google.com", "description": "Realtime DB & auth.", "icon": "◉", "color": "#ff7a5c", "clicks": 0, "pinned": false, "addedAt": 0 }
+      ]
+    },
+    {
+      "id": "tab-ai",
+      "name": "AI",
+      "icon": "◈",
+      "items": [
+        { "id": "i-claude", "type": "link", "title": "Claude", "url": "https://claude.ai", "description": "The good one.", "icon": "✦", "color": "#ff7a5c", "clicks": 0, "pinned": true, "addedAt": 0 },
+        { "id": "i-aistudio", "type": "link", "title": "Google AI Studio", "url": "https://aistudio.google.com", "description": "Gemini playground.", "icon": "◇", "color": "#4dabff", "clicks": 0, "pinned": false, "addedAt": 0 },
+        { "id": "i-groq", "type": "link", "title": "Groq Console", "url": "https://console.groq.com", "description": "Fast inference.", "icon": "⚡", "color": "#ffb547", "clicks": 0, "pinned": false, "addedAt": 0 }
+      ]
+    },
+    {
+      "id": "tab-projects",
+      "name": "Projects",
+      "icon": "▣",
+      "items": [
+        { "id": "i-fitplanner", "type": "repo", "title": "FitPlanner Pro", "url": "", "description": "Full-stack fitness web app · Firebase + vanilla JS.", "icon": "◆", "color": "#00e5a0", "clicks": 0, "pinned": false, "addedAt": 0 }
+      ]
+    }
+  ],
+  "notes": ""
+};
+/* END_PUBLISHED_CONFIG */
+
 // ---------- STATE ----------
+const STORAGE_KEY = 'commandcenter:draft:v1';
+const COLORS = ['#00e5a0', '#4dabff', '#ff6bd6', '#ffb547', '#ff7a5c', '#c084fc', '#a3e635', '#22d3ee'];
+
 const state = {
   data: null,
+  passwordHash: PUBLISHED_PASSWORD_HASH,
   activeTabId: null,
   adminMode: false,
+  hasDraft: false,
   editingItem: null,
   editingTab: null,
   itemType: 'link',
@@ -1258,13 +1336,10 @@ const state = {
   searchMatches: [],
 };
 
-const STORAGE_KEY = 'dashboard:data';
-const COLORS = ['#00e5a0', '#4dabff', '#ff6bd6', '#ffb547', '#ff7a5c', '#c084fc', '#a3e635', '#22d3ee'];
-
 // ---------- HELPERS ----------
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const uid = () => 'x' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 async function sha256(str) {
@@ -1272,92 +1347,58 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function toast(msg, variant = 'success') {
+function toast(msg, variant = 'success', duration = 3000) {
   const t = document.createElement('div');
   t.className = 'toast ' + (variant === 'success' ? '' : variant);
   t.textContent = msg;
   $('#toast-container').appendChild(t);
-  setTimeout(() => { t.style.opacity = 0; t.style.transform = 'translateX(8px)'; t.style.transition = 'all 0.3s'; }, 2500);
-  setTimeout(() => t.remove(), 2800);
+  setTimeout(() => { t.style.opacity = 0; t.style.transform = 'translateX(8px)'; t.style.transition = 'all 0.3s'; }, duration - 300);
+  setTimeout(() => t.remove(), duration);
 }
 
 // ---------- STORAGE ----------
-async function loadData() {
+function loadDraft() {
   try {
-    const res = await window.storage.get(STORAGE_KEY);
-    if (res && res.value) {
-      return JSON.parse(res.value);
-    }
-  } catch (e) {
-    // key may not exist
-  }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.data && parsed.passwordHash) return parsed;
+  } catch (e) {}
   return null;
 }
 
-async function saveData() {
+function saveDraft() {
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(state.data));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      data: state.data,
+      passwordHash: state.passwordHash,
+      savedAt: Date.now()
+    }));
+    state.hasDraft = true;
+    document.body.classList.add('has-draft');
+    updatePublishCard();
   } catch (e) {
     toast('Save failed: ' + e.message, 'error');
   }
 }
 
-// ---------- DEFAULTS ----------
-function defaultData(passwordHash) {
-  const tab1 = uid(), tab2 = uid(), tab3 = uid(), tab4 = uid();
-  return {
-    version: 1,
-    password: passwordHash,
-    createdAt: Date.now(),
-    profile: {
-      name: 'John',
-      bio: 'Developer · Builder · Independent',
-      avatar: '',
-      socials: [
-        { name: 'GitHub', url: 'https://github.com', icon: '◆' },
-      ],
-    },
-    theme: { accent: '#00e5a0' },
-    tabs: [
-      {
-        id: tab1, name: 'Home', icon: '⌂',
-        items: [
-          { id: uid(), type: 'link', title: 'Gmail', url: 'https://mail.google.com', description: 'Inbox zero, always.', icon: '✉', color: '#4dabff', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'Calendar', url: 'https://calendar.google.com', description: 'Time blocks and deep work.', icon: '◐', color: '#ff6bd6', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'note', title: 'About Me', url: '', description: 'Independent developer focused on building tools and AI-powered workflows. Customize this card and the rest of the dashboard in admin mode.', icon: '❐', color: '#00e5a0', clicks: 0, pinned: true, addedAt: Date.now() },
-        ],
-      },
-      {
-        id: tab2, name: 'Dev', icon: '⚡',
-        items: [
-          { id: uid(), type: 'link', title: 'GitHub', url: 'https://github.com', description: 'Repositories and code.', icon: '◆', color: '#00e5a0', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'MDN Web Docs', url: 'https://developer.mozilla.org', description: 'The reference for the web.', icon: '◈', color: '#4dabff', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'Stack Overflow', url: 'https://stackoverflow.com', description: 'When in doubt.', icon: '▲', color: '#ffb547', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'Firebase Console', url: 'https://console.firebase.google.com', description: 'Realtime DB & auth.', icon: '◉', color: '#ff7a5c', clicks: 0, pinned: false, addedAt: Date.now() },
-        ],
-      },
-      {
-        id: tab3, name: 'AI', icon: '◈',
-        items: [
-          { id: uid(), type: 'link', title: 'Claude', url: 'https://claude.ai', description: 'The good one.', icon: '✦', color: '#ff7a5c', clicks: 0, pinned: true, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'Google AI Studio', url: 'https://aistudio.google.com', description: 'Gemini playground.', icon: '◇', color: '#4dabff', clicks: 0, pinned: false, addedAt: Date.now() },
-          { id: uid(), type: 'link', title: 'Groq Console', url: 'https://console.groq.com', description: 'Fast inference.', icon: '⚡', color: '#ffb547', clicks: 0, pinned: false, addedAt: Date.now() },
-        ],
-      },
-      {
-        id: tab4, name: 'Projects', icon: '▣',
-        items: [
-          { id: uid(), type: 'repo', title: 'FitPlanner Pro', url: '', description: 'Full-stack fitness web app · Firebase + vanilla JS.', icon: '◆', color: '#00e5a0', clicks: 0, pinned: false, addedAt: Date.now() },
-        ],
-      },
-    ],
-    notes: '',
-  };
+function clearDraft() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  state.hasDraft = false;
+  document.body.classList.remove('has-draft');
+  updatePublishCard();
+}
+
+function updatePublishCard() {
+  const card = $('#publish-card');
+  if (!card) return;
+  card.style.display = state.adminMode && state.hasDraft ? 'block' : 'none';
 }
 
 // ---------- RENDER ----------
 function render() {
   document.body.classList.toggle('admin-mode', state.adminMode);
+  document.body.classList.toggle('has-draft', state.hasDraft);
 
   // theme
   if (state.data && state.data.theme && state.data.theme.accent) {
@@ -1368,7 +1409,6 @@ function render() {
     document.documentElement.style.setProperty('--border-accent', hexToRgba(a, 0.3));
   }
 
-  // status
   $('#mode-indicator').textContent = state.adminMode ? 'ADMIN MODE · EDITING' : 'VIEW MODE';
   $('#mode-indicator').classList.toggle('admin', state.adminMode);
   $('#status-dot').classList.toggle('admin', state.adminMode);
@@ -1436,8 +1476,7 @@ function render() {
       ${activeTab.items.length === 0 && !state.adminMode ? `
         <div class="empty">
           <div class="empty-title">Nothing here yet</div>
-          <div>Unlock admin mode to add items to this tab.</div>
-          <div class="empty-hint">Ctrl + Shift + E</div>
+          <div>This tab is empty.</div>
         </div>
       ` : `
         <div class="items-grid" id="items-grid">
@@ -1517,16 +1556,14 @@ function renderEmpty() {
     <div class="container">
       <div class="empty" style="padding: 120px 24px;">
         <div class="empty-title">No tabs yet</div>
-        <div>Unlock admin mode and add your first tab.</div>
+        <div>Unlock admin mode to add your first tab.</div>
         <div class="empty-hint">CTRL + SHIFT + E</div>
       </div>
     </div>
   `;
 }
 
-function totalItems() {
-  return state.data.tabs.reduce((n, t) => n + t.items.length, 0);
-}
+function totalItems() { return state.data.tabs.reduce((n, t) => n + t.items.length, 0); }
 
 function shortenUrl(url) {
   try {
@@ -1581,7 +1618,7 @@ function attachHandlers() {
       const item = tab && tab.items.find(i => i.id === id);
       if (item && item.type !== 'note' && item.url) {
         item.clicks = (item.clicks || 0) + 1;
-        saveData();
+        saveDraft();
       }
       if (item && item.type === 'note') {
         e.preventDefault();
@@ -1598,9 +1635,7 @@ function attachHandlers() {
   if (searchTrig) searchTrig.addEventListener('click', openSearch);
 }
 
-// ---------- NOTE MODAL (read only preview for note cards) ----------
 function showNoteModal(item) {
-  // Just open a toast-like alert for read mode; in admin, edit via edit button.
   const modal = document.createElement('div');
   modal.className = 'modal show';
   modal.innerHTML = `
@@ -1625,14 +1660,17 @@ function showNoteModal(item) {
 async function unlockAdmin() {
   const input = $('#password-input');
   const hash = await sha256(input.value);
-  if (hash === state.data.password) {
+  if (hash === state.passwordHash) {
     state.adminMode = true;
     state.passwordAttempts = 3;
     closeModal('password-modal');
     input.value = '';
+    $('#password-hint').textContent = '3 attempts remaining';
+    $('#password-hint').style.color = '';
     render();
-    toast('Admin mode unlocked');
     renderSettingsAdminOnly();
+    updatePublishCard();
+    toast('Admin mode unlocked');
   } else {
     state.passwordAttempts--;
     $('#password-hint').textContent = `${state.passwordAttempts} attempt${state.passwordAttempts===1?'':'s'} remaining`;
@@ -1650,11 +1688,13 @@ function lockAdmin() {
   state.adminMode = false;
   render();
   renderSettingsAdminOnly();
+  updatePublishCard();
   toast('Admin mode locked');
 }
 
 function renderSettingsAdminOnly() {
   $$('#settings-modal .admin-only').forEach(el => {
+    if (el.id === 'publish-card') return; // handled separately
     el.style.display = state.adminMode ? 'flex' : 'none';
   });
 }
@@ -1662,7 +1702,6 @@ function renderSettingsAdminOnly() {
 // ---------- ITEM CRUD ----------
 function openItemModal(itemId) {
   state.editingItem = itemId;
-  const modal = $('#item-modal');
   const tab = state.data.tabs.find(t => t.id === state.activeTabId);
 
   if (itemId) {
@@ -1705,7 +1744,7 @@ function toggleUrlField() {
   $('#item-url-field').style.display = state.itemType === 'note' ? 'none' : 'block';
 }
 
-async function saveItem() {
+function saveItem() {
   const title = $('#item-title').value.trim();
   const url = $('#item-url').value.trim();
   const description = $('#item-desc').value.trim();
@@ -1725,26 +1764,26 @@ async function saveItem() {
       clicks: 0, pinned: false, addedAt: Date.now(),
     });
   }
-  await saveData();
+  saveDraft();
   closeModal('item-modal');
   render();
   toast(state.editingItem ? 'Item updated' : 'Item added');
 }
 
-async function deleteItem(itemId) {
+function deleteItem(itemId) {
   const tab = state.data.tabs.find(t => t.id === state.activeTabId);
   if (!confirm('Delete this item?')) return;
   tab.items = tab.items.filter(i => i.id !== itemId);
-  await saveData();
+  saveDraft();
   render();
   toast('Item deleted');
 }
 
-async function togglePin(itemId) {
+function togglePin(itemId) {
   const tab = state.data.tabs.find(t => t.id === state.activeTabId);
   const item = tab.items.find(i => i.id === itemId);
   item.pinned = !item.pinned;
-  await saveData();
+  saveDraft();
   render();
 }
 
@@ -1771,7 +1810,7 @@ function openTabModal(tabId) {
   setTimeout(() => $('#tab-name').focus(), 50);
 }
 
-async function saveTab() {
+function saveTab() {
   const name = $('#tab-name').value.trim();
   const icon = $('#tab-icon').value.trim() || '●';
   if (!name) { toast('Name is required', 'error'); return; }
@@ -1783,18 +1822,18 @@ async function saveTab() {
     state.data.tabs.push(newTab);
     state.activeTabId = newTab.id;
   }
-  await saveData();
+  saveDraft();
   closeModal('tab-modal');
   render();
   toast(state.editingTab ? 'Tab updated' : 'Tab added');
 }
 
-async function deleteTab() {
+function deleteTab() {
   if (state.data.tabs.length <= 1) { toast('Cannot delete last tab', 'error'); return; }
   if (!confirm('Delete this tab and all its items?')) return;
   state.data.tabs = state.data.tabs.filter(t => t.id !== state.editingTab);
   if (state.activeTabId === state.editingTab) state.activeTabId = state.data.tabs[0].id;
-  await saveData();
+  saveDraft();
   closeModal('tab-modal');
   render();
   toast('Tab deleted');
@@ -1819,13 +1858,13 @@ function renderProfileSocials() {
       <button class="btn ghost" data-sr="${i}" style="padding:0; font-size:14px;">×</button>
     </div>
   `).join('');
-  $$('[data-sr]').forEach(b => b.addEventListener('click', () => {
+  $$('[data-sr]', container).forEach(b => b.addEventListener('click', () => {
     state.data.profile.socials.splice(+b.dataset.sr, 1);
     renderProfileSocials();
   }));
 }
 
-async function saveProfile() {
+function saveProfile() {
   state.data.profile.name = $('#profile-name').value.trim() || 'You';
   state.data.profile.bio = $('#profile-bio').value.trim();
   state.data.profile.avatar = $('#profile-avatar').value.trim();
@@ -1837,7 +1876,7 @@ async function saveProfile() {
     if (name && url) socials.push({ icon: icon || '◈', name, url });
   });
   state.data.profile.socials = socials;
-  await saveData();
+  saveDraft();
   closeModal('profile-modal');
   render();
   toast('Profile saved');
@@ -1858,9 +1897,7 @@ function updateSearch(q) {
     state.data.tabs.forEach(tab => {
       tab.items.forEach(item => {
         const hay = (item.title + ' ' + (item.description||'') + ' ' + (item.url||'') + ' ' + tab.name).toLowerCase();
-        if (hay.includes(q)) {
-          results.push({ item, tab });
-        }
+        if (hay.includes(q)) results.push({ item, tab });
       });
     });
   }
@@ -1888,18 +1925,13 @@ function updateSearch(q) {
     </a>
   `).join('');
   $$('#search-results .search-result').forEach(el => {
-    el.addEventListener('mouseenter', () => {
-      state.searchSelected = +el.dataset.idx;
-      updateSearchSelection();
-    });
-    el.addEventListener('click', (e) => {
+    el.addEventListener('mouseenter', () => { state.searchSelected = +el.dataset.idx; updateSearchSelection(); });
+    el.addEventListener('click', () => {
       const r = state.searchMatches[+el.dataset.idx];
-      if (r && r.tab) {
-        state.activeTabId = r.tab.id;
-      }
+      if (r && r.tab) state.activeTabId = r.tab.id;
       if (r && r.item && r.item.type !== 'note' && r.item.url) {
         r.item.clicks = (r.item.clicks || 0) + 1;
-        saveData();
+        saveDraft();
       }
       closeModal('search-modal');
       render();
@@ -1942,9 +1974,10 @@ function renderColorPicker(id, active, onPick) {
 // ---------- SETTINGS ----------
 function openSettings() {
   renderSettingsAdminOnly();
-  renderColorPicker('theme-color-picker', state.data.theme.accent, async (c) => {
+  updatePublishCard();
+  renderColorPicker('theme-color-picker', state.data.theme.accent, (c) => {
     state.data.theme.accent = c;
-    await saveData();
+    saveDraft();
     render();
   });
   openModal('settings-modal');
@@ -1962,22 +1995,23 @@ function openNotes() {
 function onNotesInput() {
   $('#notes-status').textContent = 'SAVING…';
   clearTimeout(state.notesTimer);
-  state.notesTimer = setTimeout(async () => {
+  state.notesTimer = setTimeout(() => {
     state.data.notes = $('#notes-textarea').value;
-    await saveData();
+    saveDraft();
     $('#notes-status').textContent = 'SAVED · ' + new Date().toLocaleTimeString();
   }, 400);
 }
 
 // ---------- IMPORT / EXPORT ----------
 function exportData() {
-  const clone = JSON.parse(JSON.stringify(state.data));
-  delete clone.password; // don't leak hash
-  const blob = new Blob([JSON.stringify(clone, null, 2)], { type: 'application/json' });
+  const payload = { data: state.data, exportedAt: new Date().toISOString() };
+  // Do not export password hash by default
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `command-center-backup-${new Date().toISOString().split('T')[0]}.json`;
   a.click();
+  URL.revokeObjectURL(a.href);
   toast('Backup exported');
 }
 
@@ -1989,29 +2023,19 @@ async function onImportFile(e) {
   try {
     const text = await file.text();
     const parsed = JSON.parse(text);
-    if (!parsed.tabs || !Array.isArray(parsed.tabs)) throw new Error('Invalid backup file');
-    if (!confirm('This will overwrite your current dashboard. Continue?')) return;
-    // Preserve current password
-    parsed.password = state.data.password;
-    state.data = parsed;
-    state.activeTabId = parsed.tabs[0] && parsed.tabs[0].id;
-    await saveData();
+    const importedData = parsed.data || parsed; // support old format
+    if (!importedData.tabs || !Array.isArray(importedData.tabs)) throw new Error('Invalid backup');
+    if (!confirm('Import this backup as a draft? Your current state will be replaced.')) return;
+    state.data = importedData;
+    state.activeTabId = importedData.tabs[0] && importedData.tabs[0].id;
+    saveDraft();
     closeModal('settings-modal');
     render();
-    toast('Backup imported');
+    toast('Backup imported as draft');
   } catch (err) {
     toast('Import failed: ' + err.message, 'error');
   }
   e.target.value = '';
-}
-
-async function resetAll() {
-  if (!confirm('Permanently wipe ALL data? This cannot be undone.')) return;
-  if (!confirm('Really sure? You will need to set a new password.')) return;
-  try {
-    await window.storage.delete(STORAGE_KEY);
-  } catch (e) {}
-  location.reload();
 }
 
 // ---------- CHANGE PASSWORD ----------
@@ -2020,14 +2044,76 @@ async function changePassword() {
   const n1 = $('#cp-new1').value;
   const n2 = $('#cp-new2').value;
   const curHash = await sha256(cur);
-  if (curHash !== state.data.password) { toast('Current password incorrect', 'error'); return; }
+  if (curHash !== state.passwordHash) { toast('Current password incorrect', 'error'); return; }
   if (n1.length < 4) { toast('Password must be at least 4 chars', 'error'); return; }
   if (n1 !== n2) { toast('Passwords do not match', 'error'); return; }
-  state.data.password = await sha256(n1);
-  await saveData();
+  state.passwordHash = await sha256(n1);
+  saveDraft();
   closeModal('change-password-modal');
   $('#cp-current').value = $('#cp-new1').value = $('#cp-new2').value = '';
-  toast('Password updated');
+  toast('Password updated — publish to activate for visitors', 'warn', 4500);
+}
+
+// ---------- PUBLISH ----------
+async function publishSite() {
+  try {
+    let source;
+    try {
+      const res = await fetch(window.location.href, { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch failed');
+      source = await res.text();
+    } catch (fetchErr) {
+      // Fallback for file:// or CORS issues
+      toast('Cannot fetch current source. If viewing via file://, upload to GitHub first or serve with a local server.', 'error', 5500);
+      return;
+    }
+
+    // Strip per-session state before baking in
+    const publishData = JSON.parse(JSON.stringify(state.data));
+
+    const newBlock =
+      '/* BEGIN_PUBLISHED_CONFIG */\n' +
+      'const PUBLISHED_PASSWORD_HASH = ' + JSON.stringify(state.passwordHash) + ';\n' +
+      'const PUBLISHED_DATA = ' + JSON.stringify(publishData, null, 2) + ';\n' +
+      '/* END_PUBLISHED_CONFIG */';
+
+    const re = /\/\* BEGIN_PUBLISHED_CONFIG \*\/[\s\S]*?\/\* END_PUBLISHED_CONFIG \*\//;
+    if (!re.test(source)) {
+      toast('Could not find config markers in source. File may have been modified.', 'error');
+      return;
+    }
+    const newSource = source.replace(re, () => newBlock);
+
+    const blob = new Blob([newSource], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+
+    // Clear draft — it's now "published" (locally at least)
+    clearDraft();
+    // Refresh published constants in memory so subsequent view shows this as non-draft
+    try {
+      Object.assign(PUBLISHED_DATA, publishData);
+    } catch {}
+    toast('index.html downloaded. Replace it in your GitHub repo to publish to visitors.', 'success', 5000);
+  } catch (e) {
+    toast('Publish failed: ' + e.message, 'error');
+  }
+}
+
+function discardDraft() {
+  if (!confirm('Discard all unpublished changes and revert to the published version?')) return;
+  clearDraft();
+  state.data = JSON.parse(JSON.stringify(PUBLISHED_DATA));
+  state.passwordHash = PUBLISHED_PASSWORD_HASH;
+  state.activeTabId = state.data.tabs[0] && state.data.tabs[0].id;
+  closeModal('settings-modal');
+  render();
+  toast('Draft discarded');
 }
 
 // ---------- MODAL HELPERS ----------
@@ -2059,38 +2145,26 @@ function renderShortcuts() {
 }
 
 // ---------- INIT ----------
-async function init() {
+function init() {
   renderShortcuts();
-  const data = await loadData();
-  if (!data) {
-    openModal('welcome-modal');
-    $('#welcome-pass1').focus();
+  const draft = loadDraft();
+  if (draft) {
+    state.data = draft.data;
+    state.passwordHash = draft.passwordHash;
+    state.hasDraft = true;
   } else {
-    state.data = data;
-    state.activeTabId = data.tabs[0] && data.tabs[0].id;
-    render();
+    state.data = JSON.parse(JSON.stringify(PUBLISHED_DATA));
+    state.passwordHash = PUBLISHED_PASSWORD_HASH;
+    state.hasDraft = false;
   }
+  state.activeTabId = state.data.tabs[0] && state.data.tabs[0].id;
+  document.body.classList.toggle('has-draft', state.hasDraft);
+  render();
   wireGlobalHandlers();
   startClock();
 }
 
 function wireGlobalHandlers() {
-  // Welcome
-  $('#welcome-submit').addEventListener('click', async () => {
-    const p1 = $('#welcome-pass1').value;
-    const p2 = $('#welcome-pass2').value;
-    if (p1.length < 4) { toast('Password must be at least 4 characters', 'error'); return; }
-    if (p1 !== p2) { toast('Passwords do not match', 'error'); return; }
-    const hash = await sha256(p1);
-    state.data = defaultData(hash);
-    state.activeTabId = state.data.tabs[0].id;
-    await saveData();
-    closeModal('welcome-modal');
-    render();
-    toast('Welcome. Press Ctrl+Shift+E to enter admin mode.', 'success');
-  });
-  $('#welcome-pass2').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#welcome-submit').click(); });
-
   // Password modal
   $('#password-submit').addEventListener('click', unlockAdmin);
   $('#password-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockAdmin(); });
@@ -2109,12 +2183,12 @@ function wireGlobalHandlers() {
     state.itemIcon = v;
   });
   $('#item-save').addEventListener('click', saveItem);
-  $('#item-delete').addEventListener('click', async () => {
+  $('#item-delete').addEventListener('click', () => {
     if (!state.editingItem) return;
     if (!confirm('Delete this item?')) return;
     const tab = state.data.tabs.find(t => t.id === state.activeTabId);
     tab.items = tab.items.filter(i => i.id !== state.editingItem);
-    await saveData();
+    saveDraft();
     closeModal('item-modal');
     render();
     toast('Item deleted');
@@ -2136,11 +2210,9 @@ function wireGlobalHandlers() {
     state.data.profile.socials.push({ icon: '◈', name: '', url: '' });
     renderProfileSocials();
   });
-  $$('[data-si]').forEach(inp => { /* legacy */ });
-  // Social input delegation (since re-rendered)
   $('#profile-socials').addEventListener('input', (e) => {
     const inp = e.target;
-    if (inp.dataset.si !== undefined) {
+    if (inp.dataset && inp.dataset.si !== undefined) {
       const i = +inp.dataset.si;
       state.data.profile.socials[i][inp.dataset.sf] = inp.value;
     }
@@ -2151,9 +2223,10 @@ function wireGlobalHandlers() {
   $('#btn-export').addEventListener('click', exportData);
   $('#btn-import').addEventListener('click', importData);
   $('#import-file').addEventListener('change', onImportFile);
-  $('#btn-reset').addEventListener('click', resetAll);
+  $('#btn-publish').addEventListener('click', publishSite);
+  $('#btn-discard-draft').addEventListener('click', discardDraft);
   $('#btn-edit-profile').addEventListener('click', () => { closeModal('settings-modal'); openProfileModal(); });
-  $('#btn-change-password').addEventListener('click', () => { closeModal('settings-modal'); openModal('change-password-modal'); });
+  $('#btn-change-password').addEventListener('click', () => { closeModal('settings-modal'); openModal('change-password-modal'); setTimeout(() => $('#cp-current').focus(), 50); });
   $('#cp-save').addEventListener('click', changePassword);
   $('#btn-open-notes').addEventListener('click', openNotes);
 
@@ -2163,9 +2236,8 @@ function wireGlobalHandlers() {
   // Shortcuts
   $('#btn-shortcuts').addEventListener('click', () => openModal('shortcuts-modal'));
 
-  // Lock button
+  // Lock
   $('#btn-lock').addEventListener('click', () => {
-    if (!state.data) return;
     if (state.adminMode) lockAdmin();
     else { openModal('password-modal'); setTimeout(() => $('#password-input').focus(), 50); }
   });
@@ -2195,7 +2267,7 @@ function wireGlobalHandlers() {
         state.activeTabId = r.tab.id;
         if (r.item.type !== 'note' && r.item.url) {
           r.item.clicks = (r.item.clicks || 0) + 1;
-          saveData();
+          saveDraft();
           window.open(r.item.url, '_blank');
         }
         closeModal('search-modal');
@@ -2206,31 +2278,26 @@ function wireGlobalHandlers() {
 
   // Keyboard
   document.addEventListener('keydown', (e) => {
-    // Ignore if typing in inputs
-    const inField = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+    const inField = ['INPUT', 'TEXTAREA'].includes((document.activeElement || {}).tagName);
     const anyOpen = $$('.modal.show').length > 0;
 
-    // Ctrl+Shift+E -> admin toggle
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
       e.preventDefault();
       if (state.adminMode) lockAdmin();
       else { openModal('password-modal'); setTimeout(() => $('#password-input').focus(), 50); }
       return;
     }
-    // Ctrl+K / Cmd+K -> search
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       if (anyOpen) closeAllModals();
       openSearch();
       return;
     }
-    // Ctrl+, -> settings
     if ((e.ctrlKey || e.metaKey) && e.key === ',') {
       e.preventDefault();
       openSettings();
       return;
     }
-    // Esc
     if (e.key === 'Escape') {
       if (anyOpen) closeAllModals();
       else if (state.adminMode) lockAdmin();
@@ -2238,11 +2305,8 @@ function wireGlobalHandlers() {
     }
     if (inField) return;
 
-    // / -> search
     if (e.key === '/') { e.preventDefault(); openSearch(); return; }
-    // ? -> shortcuts
     if (e.key === '?') { e.preventDefault(); openModal('shortcuts-modal'); return; }
-    // 1-9 -> tabs
     if (/^[1-9]$/.test(e.key)) {
       const idx = +e.key - 1;
       if (state.data && state.data.tabs[idx]) {
@@ -2251,7 +2315,6 @@ function wireGlobalHandlers() {
       }
       return;
     }
-    // admin-only shortcuts
     if (state.adminMode) {
       if (e.key.toLowerCase() === 'n') { e.preventDefault(); openItemModal(null); return; }
       if (e.key.toLowerCase() === 't') { e.preventDefault(); openTabModal(null); return; }
@@ -2259,7 +2322,6 @@ function wireGlobalHandlers() {
   });
 }
 
-// ---------- CLOCK ----------
 function startClock() {
   const el = $('#clock');
   const tick = () => {
@@ -2271,7 +2333,6 @@ function startClock() {
   setInterval(tick, 1000);
 }
 
-// boot
 init();
 </script>
 </body>
