@@ -1,0 +1,2429 @@
+<!DOCTYPE html>
+<!--
+  ┌──────────────────────────────────────────────────────────────────────────┐
+  │  COMMAND CENTER · Personal dashboard · GitHub Pages build                │
+  │                                                                          │
+  │  DEFAULT PASSWORD: admin                                                 │
+  │                                                                          │
+  │  HOW IT WORKS                                                            │
+  │  ────────────                                                            │
+  │  1. Drop this file into your GitHub repo as `index.html` and enable      │
+  │     Pages (Settings > Pages > Branch: main / root).                      │
+  │  2. Visit your site. Visitors see a read-only dashboard.                 │
+  │  3. Press Ctrl+Shift+E, enter the password. You're in admin mode.        │
+  │  4. Edit anything. Your changes are cached locally in your browser       │
+  │     (not visible to others yet — you'll see a DRAFT indicator).          │
+  │  5. When happy, open Settings > Publish Site. It downloads a new         │
+  │     index.html with your edits + password baked in.                      │
+  │  6. Replace the file in your GitHub repo. Done.                          │
+  │                                                                          │
+  │  To change the password: admin > Settings > Change Password > Publish.   │
+  │  To reset everything:    admin > Settings > Discard Draft (or           │
+  │                          delete localStorage for this site).             │
+  └──────────────────────────────────────────────────────────────────────────┘
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>John Williams Info Site</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #09090b;
+    --bg-elevated: #121215;
+    --bg-card: #161619;
+    --bg-hover: #1d1d21;
+    --border: #27272a;
+    --border-strong: #3f3f46;
+    --border-accent: rgba(0, 229, 160, 0.3);
+    --text: #fafafa;
+    --text-dim: #a1a1aa;
+    --text-faint: #52525b;
+    --text-ghost: #3f3f46;
+    --accent: #00e5a0;
+    --accent-glow: rgba(0, 229, 160, 0.15);
+    --accent-bright: #4dffcd;
+    --danger: #ff4466;
+    --danger-glow: rgba(255, 68, 102, 0.1);
+    --warning: #ffb547;
+    --radius: 3px;
+    --radius-md: 6px;
+    --radius-lg: 10px;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+    --font-serif: 'Instrument Serif', 'Times New Roman', serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-feature-settings: 'ss01', 'ss02', 'cv01';
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
+    opacity: 0.25;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 85%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% -10%, var(--accent-glow), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  button { font-family: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+  input, textarea, select { font-family: inherit; color: inherit; background: none; border: none; outline: none; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ============ STATUS BAR ============ */
+  .statusbar {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 24px;
+    background: rgba(9, 9, 11, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+  }
+  .status-left, .status-right { display: flex; align-items: center; gap: 16px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .status-dot.admin {
+    background: var(--warning);
+    box-shadow: 0 0 12px var(--warning);
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+  .status-btn {
+    background: transparent; border: 1px solid transparent;
+    padding: 4px 10px; border-radius: var(--radius);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-faint);
+    transition: all 0.2s var(--ease);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .status-btn:hover { color: var(--text); border-color: var(--border-strong); }
+  .status-btn.active { color: var(--accent); border-color: var(--border-accent); }
+
+  .mode-indicator { font-weight: 500; }
+  .mode-indicator.admin { color: var(--warning); }
+
+  .draft-badge {
+    display: none;
+    padding: 2px 8px;
+    background: rgba(255, 181, 71, 0.1);
+    color: var(--warning);
+    border: 1px solid rgba(255, 181, 71, 0.3);
+    border-radius: var(--radius);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .has-draft .draft-badge { display: inline-flex; }
+
+  /* ============ CONTAINER ============ */
+  .container {
+    position: relative; z-index: 1;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ============ HEADER ============ */
+  .header {
+    margin-bottom: 48px;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 24px; }
+
+  .avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 32px;
+    color: var(--accent);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar::before {
+    content: '';
+    position: absolute; inset: -1px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, var(--accent), transparent 60%, var(--accent));
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+    z-index: -1;
+  }
+  .admin-mode .avatar::before { opacity: 0.6; animation: spin 4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .header-text h1 {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 56px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .header-text h1 .dot {
+    color: var(--accent);
+    font-style: normal;
+  }
+  .bio {
+    font-size: 13px;
+    color: var(--text-dim);
+    max-width: 480px;
+  }
+  .bio .sep { color: var(--text-ghost); margin: 0 8px; }
+
+  .header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .socials { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .social {
+    padding: 6px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.2s var(--ease);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .social:hover {
+    color: var(--accent);
+    border-color: var(--border-accent);
+    background: var(--accent-glow);
+  }
+
+  /* ============ SEARCH ============ */
+  .search-trigger {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-faint);
+    font-size: 12px;
+    min-width: 260px;
+    cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .search-trigger:hover {
+    border-color: var(--border-strong);
+    color: var(--text-dim);
+  }
+  .search-trigger .kbd { margin-left: auto; }
+
+  .kbd {
+    display: inline-flex; align-items: center;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 500;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* ============ TABS ============ */
+  .tabs-nav {
+    display: flex; align-items: center;
+    gap: 4px;
+    margin-bottom: 32px;
+    padding-bottom: 0;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-nav::-webkit-scrollbar { display: none; }
+
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 18px;
+    color: var(--text-faint);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s var(--ease);
+    white-space: nowrap;
+    position: relative;
+    background: transparent;
+  }
+  .tab:hover { color: var(--text-dim); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .tab.active .tab-icon { filter: drop-shadow(0 0 8px var(--accent)); }
+  .tab-icon { font-size: 14px; }
+  .tab-count {
+    font-size: 10px;
+    color: var(--text-ghost);
+    padding: 1px 6px;
+    background: var(--bg-elevated);
+    border-radius: 10px;
+    margin-left: 4px;
+  }
+  .tab.active .tab-count { color: var(--accent); background: var(--accent-glow); }
+
+  .admin-mode .tab .tab-edit-btn {
+    opacity: 0;
+    display: inline-flex;
+    padding: 2px;
+    color: var(--text-ghost);
+    transition: opacity 0.2s;
+    font-size: 10px;
+  }
+  .admin-mode .tab:hover .tab-edit-btn { opacity: 1; }
+  .tab-edit-btn:hover { color: var(--accent); }
+
+  .tab-add {
+    display: none;
+    padding: 12px 14px;
+    color: var(--text-faint);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+    font-size: 12px;
+    margin-left: 8px;
+    margin-bottom: -1px;
+    transition: all 0.2s var(--ease);
+  }
+  .admin-mode .tab-add { display: inline-flex; align-items: center; gap: 6px; }
+  .tab-add:hover { color: var(--accent); border-color: var(--border-accent); }
+
+  /* ============ CONTENT ============ */
+  .tab-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .tab-title .meta {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 11px;
+    color: var(--text-ghost);
+    margin-left: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .tab-actions { display: flex; gap: 8px; }
+  .btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all 0.2s var(--ease);
+    display: inline-flex; align-items: center; gap: 6px;
+    letter-spacing: 0.02em;
+  }
+  .btn:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+    background: var(--bg-hover);
+  }
+  .btn.primary {
+    color: var(--bg);
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .btn.primary:hover {
+    background: var(--accent-bright);
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .btn.ghost {
+    background: transparent;
+    border-color: transparent;
+  }
+  .btn.ghost:hover { border-color: var(--border); background: var(--bg-elevated); }
+  .btn.danger { color: var(--danger); border-color: transparent; }
+  .btn.danger:hover { background: var(--danger-glow); border-color: var(--danger); }
+  .btn.warn { color: var(--warning); border-color: rgba(255, 181, 71, 0.3); }
+  .btn.warn:hover { background: rgba(255, 181, 71, 0.1); }
+
+  .admin-only { display: none; }
+  .admin-mode .admin-only { display: inline-flex; }
+
+  /* ============ CARDS GRID ============ */
+  .items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .item-card {
+    position: relative;
+    display: block;
+    padding: 18px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.25s var(--ease);
+    overflow: hidden;
+    min-height: 108px;
+  }
+  .item-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    height: 2px; width: 0;
+    background: var(--item-color, var(--accent));
+    transition: width 0.3s var(--ease);
+  }
+  .item-card:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--item-color, var(--accent)) inset;
+  }
+  .item-card:hover::before { width: 100%; }
+
+  .item-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+  .item-icon {
+    font-size: 18px;
+    line-height: 1;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--item-color, var(--accent));
+    flex-shrink: 0;
+  }
+  .item-type-badge {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-ghost);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-weight: 500;
+  }
+  .item-type-badge.repo { color: var(--accent); border-color: var(--border-accent); }
+  .item-type-badge.doc { color: var(--warning); border-color: rgba(255, 181, 71, 0.3); }
+  .item-type-badge.note { color: var(--text-dim); }
+
+  .item-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+  .item-desc {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .item-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 10px;
+    font-size: 10px;
+    color: var(--text-ghost);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .item-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
+  .item-clicks.hot { color: var(--accent); }
+
+  .item-actions {
+    position: absolute; top: 8px; right: 8px;
+    display: none;
+    gap: 2px;
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 2px;
+  }
+  .admin-mode .item-actions { display: flex; }
+  .item-action {
+    padding: 6px;
+    border-radius: var(--radius);
+    color: var(--text-faint);
+    font-size: 11px;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .item-action:hover { background: var(--bg-elevated); color: var(--text); }
+  .item-action.pin.pinned { color: var(--accent); }
+  .item-action.delete:hover { color: var(--danger); }
+
+  .item-pinned-mark {
+    position: absolute;
+    top: 10px; right: 10px;
+    color: var(--accent);
+    font-size: 10px;
+  }
+  .admin-mode .item-pinned-mark { display: none; }
+
+  .add-item-card {
+    display: none;
+    align-items: center; justify-content: center;
+    min-height: 108px;
+    background: transparent;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    color: var(--text-faint);
+    font-size: 12px;
+    transition: all 0.2s var(--ease);
+    cursor: pointer;
+  }
+  .admin-mode .add-item-card { display: flex; }
+  .add-item-card:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  /* ============ EMPTY STATES ============ */
+  .empty {
+    padding: 80px 24px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  .empty .empty-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 28px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .empty .empty-hint {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-ghost);
+    margin-top: 16px;
+  }
+
+  /* ============ MODALS ============ */
+  .modal {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(9, 9, 11, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 80px 24px 24px;
+    animation: modalIn 0.2s var(--ease);
+  }
+  .modal.show { display: flex; }
+  @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal-content {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    width: 100%; max-width: 520px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--border);
+    overflow: hidden;
+    animation: contentIn 0.3s var(--ease);
+  }
+  .modal-content.wide { max-width: 720px; }
+  @keyframes contentIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 22px;
+    color: var(--text);
+  }
+  .modal-subtitle {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-ghost);
+    margin-top: 2px;
+  }
+  .modal-close {
+    color: var(--text-faint);
+    font-size: 18px;
+    padding: 4px 8px;
+    border-radius: var(--radius);
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--text); background: var(--bg-hover); }
+
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: flex-end; gap: 8px;
+  }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .field-input, .field-textarea, .field-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .field-input:focus, .field-textarea:focus, .field-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .field-textarea { min-height: 80px; resize: vertical; font-family: inherit; }
+  .field-hint {
+    font-size: 11px;
+    color: var(--text-ghost);
+    margin-top: 4px;
+  }
+  .field-row { display: flex; gap: 12px; }
+  .field-row .field { flex: 1; }
+
+  .type-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .type-option {
+    padding: 10px;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .type-option:hover { border-color: var(--border-strong); color: var(--text); }
+  .type-option.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+  .type-option .type-icon { font-size: 16px; display: block; margin-bottom: 4px; }
+
+  .icon-picker-wrap { display: flex; gap: 8px; }
+  .icon-preview {
+    width: 42px; height: 42px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .color-picker-wrap { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .color-swatch {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .color-swatch.active {
+    border-color: var(--text);
+    transform: scale(1.1);
+  }
+  .color-swatch input[type="color"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .color-custom {
+    border-style: dashed;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-faint);
+    font-size: 14px;
+  }
+
+  /* ============ SEARCH MODAL ============ */
+  .search-input-wrap {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-icon { color: var(--text-faint); font-size: 16px; }
+  .search-input {
+    flex: 1;
+    font-size: 16px;
+    color: var(--text);
+    background: transparent;
+    border: none;
+  }
+  .search-input::placeholder { color: var(--text-ghost); }
+
+  .search-results {
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .search-result {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .search-result:last-child { border-bottom: none; }
+  .search-result:hover, .search-result.selected {
+    background: var(--bg-hover);
+  }
+  .search-result-icon {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .search-result-info { flex: 1; min-width: 0; }
+  .search-result-title { font-size: 13px; color: var(--text); }
+  .search-result-meta {
+    font-size: 11px;
+    color: var(--text-faint);
+    display: flex; gap: 8px;
+    margin-top: 2px;
+  }
+  .search-result-tab {
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 10px;
+  }
+  .search-empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+
+  /* ============ NOTIFICATIONS ============ */
+  .toast-container {
+    position: fixed; bottom: 24px; right: 24px; z-index: 2000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    padding: 12px 18px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--text);
+    min-width: 240px;
+    max-width: 400px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    animation: toastIn 0.25s var(--ease);
+  }
+  .toast.error { border-left-color: var(--danger); }
+  .toast.warn { border-left-color: var(--warning); }
+  @keyframes toastIn { from { transform: translateX(16px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    margin-top: 80px;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-ghost);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .footer-shortcuts { display: flex; gap: 14px; flex-wrap: wrap; }
+  .footer-shortcut { display: inline-flex; align-items: center; gap: 4px; }
+
+  /* ============ SHORTCUTS MODAL ============ */
+  .shortcuts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+  .shortcut-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .shortcut-label { font-size: 12px; color: var(--text-dim); }
+  .shortcut-keys { display: flex; gap: 4px; }
+
+  /* ============ SETTINGS ============ */
+  .settings-section { margin-bottom: 24px; }
+  .settings-section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  .settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    gap: 16px;
+  }
+  .settings-row-label { font-size: 13px; color: var(--text); }
+  .settings-row-desc { font-size: 11px; color: var(--text-faint); margin-top: 2px; line-height: 1.5; }
+
+  .publish-card {
+    padding: 16px;
+    background: linear-gradient(135deg, var(--accent-glow), transparent);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+  }
+  .publish-card-title {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .publish-card-desc {
+    font-size: 11.5px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  /* ============ NOTES ============ */
+  .notes-textarea {
+    width: 100%;
+    min-height: 240px;
+    padding: 16px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text);
+    resize: vertical;
+    line-height: 1.6;
+  }
+  .notes-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+    outline: none;
+  }
+
+  /* ============ MOBILE ============ */
+  @media (max-width: 720px) {
+    .container { padding: 32px 16px 48px; }
+    .header { flex-direction: column; align-items: flex-start; gap: 24px; }
+    .header-right { align-items: flex-start; width: 100%; }
+    .header-text h1 { font-size: 42px; }
+    .search-trigger { min-width: 0; width: 100%; }
+    .statusbar { padding: 8px 16px; font-size: 10px; }
+    .statusbar .status-right .status-btn:not(.essential) { display: none; }
+    .shortcuts-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="statusbar">
+  <div class="status-left">
+    <span class="status-dot" id="status-dot"></span>
+    <span class="mode-indicator" id="mode-indicator">VIEW MODE</span>
+    <span class="draft-badge" title="You have unpublished changes">● DRAFT</span>
+    <span class="status-btn admin-only essential" id="exit-admin-btn" title="Exit admin (Esc)">
+      ↩ EXIT ADMIN
+    </span>
+  </div>
+  <div class="status-right">
+    <button class="status-btn" id="btn-shortcuts" title="Shortcuts (?)">⌨ KEYS</button>
+    <button class="status-btn" id="btn-settings" title="Settings">⚙ CONFIG</button>
+    <button class="status-btn essential" id="btn-lock" title="Admin mode (Ctrl+Shift+E)">
+      <span id="lock-icon">⌂</span> <span id="lock-label">LOCK</span>
+    </button>
+    <span id="clock" class="essential"></span>
+  </div>
+</div>
+
+<div id="app">
+  <div class="empty" style="padding: 120px 24px;">
+    <div class="empty-title">Loading…</div>
+  </div>
+</div>
+
+<!-- ============ MODALS ============ -->
+<div class="modal" id="password-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Unlock Admin</div>
+        <div class="modal-subtitle">Enter master password</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <input type="password" id="password-input" class="field-input" placeholder="••••••••" autocomplete="current-password" />
+        <div class="field-hint" id="password-hint">3 attempts remaining</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="password-submit">UNLOCK →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="search-modal">
+  <div class="modal-content wide" style="padding: 0;">
+    <div class="search-input-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search-input" class="search-input" placeholder="Search everything…" autocomplete="off" />
+      <span class="kbd">ESC</span>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-empty">Start typing to search your links, tabs, and notes.</div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="item-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="item-modal-title">New Item</div>
+        <div class="modal-subtitle" id="item-modal-sub">Add to current tab</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Type</label>
+        <div class="type-picker" id="item-type-picker">
+          <div class="type-option active" data-type="link"><span class="type-icon">◈</span>Link</div>
+          <div class="type-option" data-type="repo"><span class="type-icon">◆</span>Repo</div>
+          <div class="type-option" data-type="doc"><span class="type-icon">▣</span>Doc</div>
+          <div class="type-option" data-type="note"><span class="type-icon">❐</span>Note</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Title</label>
+        <input type="text" id="item-title" class="field-input" placeholder="GitHub" />
+      </div>
+      <div class="field" id="item-url-field">
+        <label class="field-label">URL</label>
+        <input type="url" id="item-url" class="field-input" placeholder="https://github.com/..." />
+      </div>
+      <div class="field">
+        <label class="field-label">Description</label>
+        <textarea id="item-desc" class="field-textarea" placeholder="Short description…"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label class="field-label">Icon</label>
+          <div class="icon-picker-wrap">
+            <div class="icon-preview" id="item-icon-preview">◈</div>
+            <input type="text" id="item-icon" class="field-input" placeholder="emoji or symbol" maxlength="4" />
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Accent Color</label>
+          <div class="color-picker-wrap" id="item-color-picker"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn danger" id="item-delete" style="margin-right: auto; display:none;">DELETE</button>
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="item-save">SAVE →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="tab-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="tab-modal-title">New Tab</div>
+        <div class="modal-subtitle">Organize your links</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input type="text" id="tab-name" class="field-input" placeholder="e.g. Dev Tools" />
+      </div>
+      <div class="field">
+        <label class="field-label">Icon</label>
+        <div class="icon-picker-wrap">
+          <div class="icon-preview" id="tab-icon-preview">⚡</div>
+          <input type="text" id="tab-icon" class="field-input" placeholder="emoji or symbol" maxlength="4" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn danger" id="tab-delete" style="margin-right:auto; display:none;">DELETE TAB</button>
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="tab-save">SAVE →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="profile-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Profile</div>
+        <div class="modal-subtitle">Edit your identity</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Name</label>
+        <input type="text" id="profile-name" class="field-input" />
+      </div>
+      <div class="field">
+        <label class="field-label">Bio / Tagline</label>
+        <input type="text" id="profile-bio" class="field-input" placeholder="Builder · Developer · Explorer" />
+      </div>
+      <div class="field">
+        <label class="field-label">Avatar URL (optional)</label>
+        <input type="url" id="profile-avatar" class="field-input" placeholder="https://... or leave blank for initials" />
+      </div>
+      <div class="field">
+        <label class="field-label">Social Links</label>
+        <div id="profile-socials"></div>
+        <button class="btn ghost" id="profile-add-social" style="margin-top: 8px; font-size: 11px;">+ ADD SOCIAL</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="profile-save">SAVE →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="settings-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Configuration</div>
+        <div class="modal-subtitle">Settings · Theme · Publishing</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <!-- PUBLISH CARD (admin only, visible only when draft exists) -->
+      <div class="publish-card admin-only" id="publish-card" style="display:none;">
+        <div class="publish-card-title">You have unpublished changes</div>
+        <div class="publish-card-desc">Download an updated <code style="color:var(--accent);">index.html</code> with your current dashboard + password baked in. Replace the file in your GitHub repo to publish.</div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn primary" id="btn-publish">◆ PUBLISH SITE</button>
+          <button class="btn warn" id="btn-discard-draft">DISCARD DRAFT</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Appearance</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Accent Color</div>
+            <div class="settings-row-desc">Primary highlight across the UI</div>
+          </div>
+          <div class="color-picker-wrap" id="theme-color-picker"></div>
+        </div>
+      </div>
+
+      <div class="settings-section admin-only" style="display:none;">
+        <div class="settings-section-title">Profile &amp; Security</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Edit Profile</div>
+            <div class="settings-row-desc">Name, bio, avatar, socials</div>
+          </div>
+          <button class="btn" id="btn-edit-profile">EDIT →</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Change Password</div>
+            <div class="settings-row-desc">Updates only after you publish</div>
+          </div>
+          <button class="btn" id="btn-change-password">CHANGE</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Quick Notes</div>
+            <div class="settings-row-desc">Scratchpad — stays in your browser</div>
+          </div>
+          <button class="btn" id="btn-open-notes">OPEN →</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">Data</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Export Backup (JSON)</div>
+            <div class="settings-row-desc">Download your data as JSON for backup</div>
+          </div>
+          <button class="btn" id="btn-export">EXPORT</button>
+        </div>
+        <div class="settings-row admin-only" style="display:none;">
+          <div>
+            <div class="settings-row-label">Import Backup (JSON)</div>
+            <div class="settings-row-desc">Restore from JSON — creates a draft</div>
+          </div>
+          <button class="btn" id="btn-import">IMPORT</button>
+          <input type="file" id="import-file" accept=".json" style="display:none;" />
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-title">About</div>
+        <div class="settings-row">
+          <div>
+            <div class="settings-row-label">Command Center</div>
+            <div class="settings-row-desc">Personal dashboard · GitHub Pages build</div>
+          </div>
+          <div style="font-size:10px; color:var(--text-ghost); letter-spacing:0.1em;">v1.1</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="notes-modal">
+  <div class="modal-content wide">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Scratchpad</div>
+        <div class="modal-subtitle">Autosaves · Admin only</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="notes-textarea" class="notes-textarea" placeholder="Drop thoughts, snippets, shopping lists, brilliant ideas…"></textarea>
+    </div>
+    <div class="modal-footer">
+      <div style="margin-right:auto; font-size:10px; color:var(--text-ghost); letter-spacing:0.1em;" id="notes-status">SAVED</div>
+      <button class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="shortcuts-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Keyboard</div>
+        <div class="modal-subtitle">Shortcuts &amp; bindings</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="shortcuts-grid" id="shortcuts-grid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="change-password-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Change Password</div>
+        <div class="modal-subtitle">New password activates after publishing</div>
+      </div>
+      <button class="modal-close" data-close>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label class="field-label">Current Password</label>
+        <input type="password" id="cp-current" class="field-input" />
+      </div>
+      <div class="field">
+        <label class="field-label">New Password</label>
+        <input type="password" id="cp-new1" class="field-input" />
+      </div>
+      <div class="field">
+        <label class="field-label">Confirm New Password</label>
+        <input type="password" id="cp-new2" class="field-input" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="cp-save">UPDATE →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ============================================================
+// COMMAND CENTER · GitHub Pages build
+// ============================================================
+// The PUBLISHED_CONFIG block below is what visitors see.
+// Edit in admin mode, then use Settings > Publish Site to
+// download a new index.html with your changes baked in.
+// Default password: "admin" (change it in admin settings, then publish).
+// ============================================================
+
+/* BEGIN_PUBLISHED_CONFIG */
+const PUBLISHED_PASSWORD_HASH = "18d4f47ce4c9fcb29b24a15d5ace3d2aba7f5f40b83798344165ac28b6ea4827";
+const PUBLISHED_DATA = {
+  "profile": {
+    "name": "John Williams",
+    "bio": "Developer · Builder · Independent",
+    "avatar": "",
+    "socials": []
+  },
+  "theme": {
+    "accent": "#4dabff"
+  },
+  "tabs": [
+    {
+      "id": "tab-home",
+      "name": "Home",
+      "icon": "⌂",
+      "items": [
+        {
+          "id": "i-about",
+          "type": "note",
+          "title": "About Me",
+          "url": "",
+          "description": "I am a high school student who is interested in everything technology related, whether it be AI, robotics, programming, or website creation. I have made countless projects and activities to display these interests, and have gone above and beyond in at least one aspect of each of them. From building a robot for competition use, or creating this website to display my achievements.",
+          "icon": "❐",
+          "color": "#00e5a0",
+          "clicks": 0,
+          "pinned": true,
+          "addedAt": 0
+        },
+        {
+          "id": "xr5fyibq1mo7scoxr",
+          "type": "doc",
+          "title": "Resume",
+          "url": "https://docs.google.com/document/d/11ABkXUfFU6GA8HEdwAM6MvqpyfAsr2QvnZtkW9NvkIw/edit?usp=sharing",
+          "description": "My official personal professional resume.",
+          "icon": "◈",
+          "color": "#4dabff",
+          "clicks": 1,
+          "pinned": true,
+          "addedAt": 1776725270847
+        },
+        {
+          "id": "xvuld501jmo7sef11",
+          "type": "link",
+          "title": "Github",
+          "url": "https://github.com/JohnComputers",
+          "description": "My Github profile overview.",
+          "icon": "◈",
+          "color": "#ff6bd6",
+          "clicks": 1,
+          "pinned": true,
+          "addedAt": 1776725351317
+        },
+        {
+          "id": "x01ahglhbmo7sic3p",
+          "type": "link",
+          "title": "LinkedIn",
+          "url": "https://www.linkedin.com/in/john-williams-233826367/",
+          "description": "My personal LinkedIn profile.",
+          "icon": "◈",
+          "color": "#ffb547",
+          "clicks": 0,
+          "pinned": true,
+          "addedAt": 1776725534149
+        }
+      ]
+    },
+    {
+      "id": "tab-projects",
+      "name": "Projects",
+      "icon": "▣",
+      "items": [
+        {
+          "id": "xoq4jo4trmo7th79g",
+          "type": "link",
+          "title": "Fit Planner Pro",
+          "url": "https://johncomputers.github.io/Fit_Planner_Pro/",
+          "description": "A personal fitness and nutrition website.",
+          "icon": "◈",
+          "color": "#00e5a0",
+          "clicks": 0,
+          "pinned": false,
+          "addedAt": 1776727160836
+        },
+        {
+          "id": "xgha9cxo6mo7tokmp",
+          "type": "note",
+          "title": "M.E.G.A.",
+          "url": "",
+          "description": "M.E.G.A. or Machine Enhanced General Assistant is an AI system that I am currently developing that can take full control over my computer and complete tasks for me that I may do less efficiently or that I may not have the time to do. Although still in development it has come a long way since initial creation and is already capable of doing many of the same things that a person can do on a computer.",
+          "icon": "◈",
+          "color": "#4dabff",
+          "clicks": 0,
+          "pinned": false,
+          "addedAt": 1776727504753
+        }
+      ]
+    },
+    {
+      "id": "xsdu4poxfmo7slu2e",
+      "name": "Math Club Tools",
+      "icon": "π",
+      "items": [
+        {
+          "id": "xgmquixummo7soavd",
+          "type": "link",
+          "title": "FAMAT Student Data",
+          "url": "https://johncomputers.github.io/FAMAT-Student-Data/",
+          "description": "A database of past FAMAT competition data.",
+          "icon": "◈",
+          "color": "#00e5a0",
+          "clicks": 1,
+          "pinned": false,
+          "addedAt": 1776725812489
+        },
+        {
+          "id": "xj3q7at92mo7sq2si",
+          "type": "link",
+          "title": "Prime",
+          "url": "https://johncomputers.github.io/Prime/",
+          "description": "A tool for finding, or verifying prime numbers.",
+          "icon": "◈",
+          "color": "#4dabff",
+          "clicks": 0,
+          "pinned": false,
+          "addedAt": 1776725895330
+        },
+        {
+          "id": "xwz5tql6rmo7tfa9k",
+          "type": "link",
+          "title": "Updated MAO Timers",
+          "url": "https://johncomputers.github.io/UpdatedMAOTimers/",
+          "description": "The new and improved FAMAT timer.",
+          "icon": "◈",
+          "color": "#ff6bd6",
+          "clicks": 0,
+          "pinned": false,
+          "addedAt": 1776727071416
+        }
+      ]
+    }
+  ],
+  "notes": ""
+};
+/* END_PUBLISHED_CONFIG */
+
+// ---------- STATE ----------
+const STORAGE_KEY = 'commandcenter:draft:v1';
+const COLORS = ['#00e5a0', '#4dabff', '#ff6bd6', '#ffb547', '#ff7a5c', '#c084fc', '#a3e635', '#22d3ee'];
+
+const state = {
+  data: null,
+  passwordHash: PUBLISHED_PASSWORD_HASH,
+  activeTabId: null,
+  adminMode: false,
+  hasDraft: false,
+  editingItem: null,
+  editingTab: null,
+  itemType: 'link',
+  itemIcon: '◈',
+  itemColor: null,
+  tabIcon: '⚡',
+  notesTimer: null,
+  passwordAttempts: 3,
+  searchSelected: 0,
+  searchMatches: [],
+};
+
+// ---------- HELPERS ----------
+const $ = (sel, ctx = document) => ctx.querySelector(sel);
+const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+const uid = () => 'x' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function toast(msg, variant = 'success', duration = 3000) {
+  const t = document.createElement('div');
+  t.className = 'toast ' + (variant === 'success' ? '' : variant);
+  t.textContent = msg;
+  $('#toast-container').appendChild(t);
+  setTimeout(() => { t.style.opacity = 0; t.style.transform = 'translateX(8px)'; t.style.transition = 'all 0.3s'; }, duration - 300);
+  setTimeout(() => t.remove(), duration);
+}
+
+// ---------- STORAGE ----------
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.data && parsed.passwordHash) return parsed;
+  } catch (e) {}
+  return null;
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      data: state.data,
+      passwordHash: state.passwordHash,
+      savedAt: Date.now()
+    }));
+    state.hasDraft = true;
+    document.body.classList.add('has-draft');
+    updatePublishCard();
+  } catch (e) {
+    toast('Save failed: ' + e.message, 'error');
+  }
+}
+
+function clearDraft() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  state.hasDraft = false;
+  document.body.classList.remove('has-draft');
+  updatePublishCard();
+}
+
+function updatePublishCard() {
+  const card = $('#publish-card');
+  if (!card) return;
+  card.style.display = state.adminMode && state.hasDraft ? 'block' : 'none';
+}
+
+// ---------- RENDER ----------
+function render() {
+  document.body.classList.toggle('admin-mode', state.adminMode);
+  document.body.classList.toggle('has-draft', state.hasDraft);
+
+  // theme
+  if (state.data && state.data.theme && state.data.theme.accent) {
+    const a = state.data.theme.accent;
+    document.documentElement.style.setProperty('--accent', a);
+    document.documentElement.style.setProperty('--accent-bright', lighten(a, 0.2));
+    document.documentElement.style.setProperty('--accent-glow', hexToRgba(a, 0.15));
+    document.documentElement.style.setProperty('--border-accent', hexToRgba(a, 0.3));
+  }
+
+  $('#mode-indicator').textContent = state.adminMode ? 'ADMIN MODE · EDITING' : 'VIEW MODE';
+  $('#mode-indicator').classList.toggle('admin', state.adminMode);
+  $('#status-dot').classList.toggle('admin', state.adminMode);
+  $('#lock-icon').textContent = state.adminMode ? '◉' : '⌂';
+  $('#lock-label').textContent = state.adminMode ? 'ADMIN' : 'LOCK';
+  $('#btn-lock').classList.toggle('active', state.adminMode);
+
+  if (!state.data) return;
+
+  const app = $('#app');
+  const activeTab = state.data.tabs.find(t => t.id === state.activeTabId) || state.data.tabs[0];
+  if (!activeTab) {
+    app.innerHTML = renderEmpty();
+    attachHandlers();
+    return;
+  }
+  state.activeTabId = activeTab.id;
+
+  app.innerHTML = `
+    <div class="container">
+      <header class="header">
+        <div class="header-left">
+          <div class="avatar" id="avatar-el">${renderAvatar()}</div>
+          <div class="header-text">
+            <h1>${escapeHtml(state.data.profile.name || 'Your Name')}<span class="dot">.</span></h1>
+            <div class="bio">${renderBio()}</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="search-trigger" id="search-trigger">
+            <span>⌕</span>
+            <span>Search everything…</span>
+            <span class="kbd">⌘K</span>
+          </button>
+          <div class="socials">
+            ${(state.data.profile.socials || []).map(s => `
+              <a href="${escapeHtml(s.url)}" target="_blank" rel="noopener" class="social">
+                <span>${escapeHtml(s.icon || '◈')}</span>
+                <span>${escapeHtml(s.name)}</span>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      </header>
+      <nav class="tabs-nav">
+        ${state.data.tabs.map(t => `
+          <button class="tab ${t.id === activeTab.id ? 'active' : ''}" data-tab-id="${t.id}">
+            <span class="tab-icon">${escapeHtml(t.icon || '●')}</span>
+            <span>${escapeHtml(t.name)}</span>
+            <span class="tab-count">${t.items.length}</span>
+            <span class="tab-edit-btn" data-edit-tab="${t.id}" title="Edit">✎</span>
+          </button>
+        `).join('')}
+        <button class="tab-add" id="tab-add-btn">＋ ADD TAB</button>
+      </nav>
+      <div class="tab-header">
+        <div class="tab-title">
+          ${escapeHtml(activeTab.name)}
+          <span class="meta">${activeTab.items.length} ITEM${activeTab.items.length === 1 ? '' : 'S'}</span>
+        </div>
+        <div class="tab-actions">
+          <button class="btn admin-only" id="add-item-btn">＋ ADD ITEM</button>
+        </div>
+      </div>
+      ${activeTab.items.length === 0 && !state.adminMode ? `
+        <div class="empty">
+          <div class="empty-title">Nothing here yet</div>
+          <div>This tab is empty.</div>
+        </div>
+      ` : `
+        <div class="items-grid" id="items-grid">
+          ${renderItems(activeTab)}
+          <button class="add-item-card" id="add-item-card">＋ Add to ${escapeHtml(activeTab.name)}</button>
+        </div>
+      `}
+      <footer class="footer">
+        <div>COMMAND CENTER · ${state.data.tabs.length} TABS · ${totalItems()} ITEMS</div>
+        <div class="footer-shortcuts">
+          <span class="footer-shortcut"><span class="kbd">⌘K</span> SEARCH</span>
+          <span class="footer-shortcut"><span class="kbd">?</span> HELP</span>
+          <span class="footer-shortcut"><span class="kbd">CTRL+SHIFT+E</span> ADMIN</span>
+        </div>
+      </footer>
+    </div>
+  `;
+  attachHandlers();
+}
+
+function renderItems(tab) {
+  const items = [...tab.items].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
+  return items.map(item => renderItem(item)).join('');
+}
+
+function renderItem(item) {
+  const isClickable = item.type !== 'note' && item.url;
+  const tag = isClickable ? 'a' : 'div';
+  const attrs = isClickable ? `href="${escapeHtml(item.url)}" target="_blank" rel="noopener"` : '';
+  const color = item.color || 'var(--accent)';
+  const typeLabel = item.type.toUpperCase();
+  const maxClicks = Math.max(1, ...state.data.tabs.flatMap(t => t.items.map(i => i.clicks || 0)));
+  const isHot = item.clicks >= maxClicks * 0.7 && item.clicks > 3;
+  return `
+    <${tag} class="item-card" ${attrs}
+      data-item-id="${item.id}"
+      style="--item-color:${color};">
+      ${item.pinned && !state.adminMode ? '<span class="item-pinned-mark">◆</span>' : ''}
+      <div class="item-actions" onclick="event.stopPropagation(); event.preventDefault();">
+        <button class="item-action pin ${item.pinned ? 'pinned' : ''}" data-pin="${item.id}" title="Pin">◆</button>
+        <button class="item-action edit" data-edit="${item.id}" title="Edit">✎</button>
+        <button class="item-action delete" data-delete="${item.id}" title="Delete">×</button>
+      </div>
+      <div class="item-header">
+        <div class="item-icon" style="color:${color}; border-color:${hexToRgba(color,0.3)};">${escapeHtml(item.icon || '◈')}</div>
+        <span class="item-type-badge ${item.type}">${typeLabel}</span>
+      </div>
+      <div class="item-title">${escapeHtml(item.title)}</div>
+      ${item.description ? `<div class="item-desc">${escapeHtml(item.description)}</div>` : ''}
+      <div class="item-footer">
+        <span class="item-url">${item.url ? escapeHtml(shortenUrl(item.url)) : '—'}</span>
+        ${item.clicks > 0 ? `<span class="item-clicks ${isHot ? 'hot' : ''}">${item.clicks} ↗</span>` : ''}
+      </div>
+    </${tag}>
+  `;
+}
+
+function renderAvatar() {
+  const av = state.data.profile.avatar;
+  if (av && /^https?:\/\//.test(av)) {
+    return `<img src="${escapeHtml(av)}" alt="" onerror="this.remove();this.parentElement.textContent='${(state.data.profile.name||'?').charAt(0)}'" />`;
+  }
+  return escapeHtml((state.data.profile.name || '?').charAt(0).toUpperCase());
+}
+
+function renderBio() {
+  const bio = state.data.profile.bio || '';
+  return escapeHtml(bio).replace(/ · /g, '<span class="sep">·</span>').replace(/ \| /g, '<span class="sep">|</span>');
+}
+
+function renderEmpty() {
+  return `
+    <div class="container">
+      <div class="empty" style="padding: 120px 24px;">
+        <div class="empty-title">No tabs yet</div>
+        <div>Unlock admin mode to add your first tab.</div>
+        <div class="empty-hint">CTRL + SHIFT + E</div>
+      </div>
+    </div>
+  `;
+}
+
+function totalItems() { return state.data.tabs.reduce((n, t) => n + t.items.length, 0); }
+
+function shortenUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, '') + (u.pathname !== '/' ? u.pathname : '');
+  } catch { return url; }
+}
+
+function hexToRgba(hex, a) {
+  const m = hex.replace('#','');
+  const bi = parseInt(m.length === 3 ? m.split('').map(c => c+c).join('') : m, 16);
+  return `rgba(${(bi>>16)&255}, ${(bi>>8)&255}, ${bi&255}, ${a})`;
+}
+
+function lighten(hex, amt) {
+  const m = hex.replace('#','');
+  const bi = parseInt(m.length === 3 ? m.split('').map(c => c+c).join('') : m, 16);
+  const r = Math.min(255, ((bi>>16)&255) + Math.round(255*amt));
+  const g = Math.min(255, ((bi>>8)&255) + Math.round(255*amt));
+  const b = Math.min(255, (bi&255) + Math.round(255*amt));
+  return '#' + [r,g,b].map(c => c.toString(16).padStart(2,'0')).join('');
+}
+
+// ---------- HANDLERS ----------
+function attachHandlers() {
+  $$('.tab').forEach(t => {
+    t.addEventListener('click', (e) => {
+      if (e.target.closest('.tab-edit-btn')) {
+        if (!state.adminMode) return;
+        openTabModal(t.dataset.tabId);
+        return;
+      }
+      state.activeTabId = t.dataset.tabId;
+      render();
+    });
+  });
+
+  const tabAdd = $('#tab-add-btn');
+  if (tabAdd) tabAdd.addEventListener('click', () => openTabModal(null));
+
+  const addItem = $('#add-item-btn');
+  if (addItem) addItem.addEventListener('click', () => openItemModal(null));
+  const addItemCard = $('#add-item-card');
+  if (addItemCard) addItemCard.addEventListener('click', () => openItemModal(null));
+
+  $$('.item-card').forEach(card => {
+    const id = card.dataset.itemId;
+    if (!id) return;
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-pin]') || e.target.closest('[data-edit]') || e.target.closest('[data-delete]')) return;
+      const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+      const item = tab && tab.items.find(i => i.id === id);
+      if (item && item.type !== 'note' && item.url) {
+        item.clicks = (item.clicks || 0) + 1;
+        saveDraft();
+      }
+      if (item && item.type === 'note') {
+        e.preventDefault();
+        showNoteModal(item);
+      }
+    });
+  });
+
+  $$('[data-pin]').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); togglePin(btn.dataset.pin); }));
+  $$('[data-edit]').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); openItemModal(btn.dataset.edit); }));
+  $$('[data-delete]').forEach(btn => btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); deleteItem(btn.dataset.delete); }));
+
+  const searchTrig = $('#search-trigger');
+  if (searchTrig) searchTrig.addEventListener('click', openSearch);
+}
+
+function showNoteModal(item) {
+  const modal = document.createElement('div');
+  modal.className = 'modal show';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">${escapeHtml(item.title)}</div>
+          <div class="modal-subtitle">Note</div>
+        </div>
+        <button class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="color: var(--text-dim); white-space: pre-wrap; line-height: 1.7;">${escapeHtml(item.description || '(empty)')}</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => { if (e.target === modal || e.target.classList.contains('modal-close')) modal.remove(); });
+}
+
+// ---------- ADMIN ----------
+async function unlockAdmin() {
+  const input = $('#password-input');
+  const hash = await sha256(input.value);
+  if (hash === state.passwordHash) {
+    state.adminMode = true;
+    state.passwordAttempts = 3;
+    closeModal('password-modal');
+    input.value = '';
+    $('#password-hint').textContent = '3 attempts remaining';
+    $('#password-hint').style.color = '';
+    render();
+    renderSettingsAdminOnly();
+    updatePublishCard();
+    toast('Admin mode unlocked');
+  } else {
+    state.passwordAttempts--;
+    $('#password-hint').textContent = `${state.passwordAttempts} attempt${state.passwordAttempts===1?'':'s'} remaining`;
+    $('#password-hint').style.color = 'var(--danger)';
+    input.value = '';
+    if (state.passwordAttempts <= 0) {
+      closeModal('password-modal');
+      toast('Too many attempts', 'error');
+      state.passwordAttempts = 3;
+    }
+  }
+}
+
+function lockAdmin() {
+  state.adminMode = false;
+  render();
+  renderSettingsAdminOnly();
+  updatePublishCard();
+  toast('Admin mode locked');
+}
+
+function renderSettingsAdminOnly() {
+  $$('#settings-modal .admin-only').forEach(el => {
+    if (el.id === 'publish-card') return; // handled separately
+    el.style.display = state.adminMode ? 'flex' : 'none';
+  });
+}
+
+// ---------- ITEM CRUD ----------
+function openItemModal(itemId) {
+  state.editingItem = itemId;
+  const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+
+  if (itemId) {
+    const item = tab.items.find(i => i.id === itemId);
+    $('#item-modal-title').textContent = 'Edit Item';
+    $('#item-modal-sub').textContent = `In ${tab.name}`;
+    $('#item-title').value = item.title;
+    $('#item-url').value = item.url;
+    $('#item-desc').value = item.description || '';
+    $('#item-icon').value = item.icon || '';
+    $('#item-icon-preview').textContent = item.icon || '◈';
+    state.itemIcon = item.icon || '◈';
+    state.itemColor = item.color || COLORS[0];
+    state.itemType = item.type;
+    $('#item-delete').style.display = 'inline-flex';
+  } else {
+    $('#item-modal-title').textContent = 'New Item';
+    $('#item-modal-sub').textContent = `Add to ${tab.name}`;
+    $('#item-title').value = '';
+    $('#item-url').value = '';
+    $('#item-desc').value = '';
+    $('#item-icon').value = '';
+    $('#item-icon-preview').textContent = '◈';
+    state.itemIcon = '◈';
+    state.itemColor = COLORS[0];
+    state.itemType = 'link';
+    $('#item-delete').style.display = 'none';
+  }
+
+  $$('#item-type-picker .type-option').forEach(opt => {
+    opt.classList.toggle('active', opt.dataset.type === state.itemType);
+  });
+  renderColorPicker('item-color-picker', state.itemColor, (c) => { state.itemColor = c; });
+  toggleUrlField();
+  openModal('item-modal');
+  setTimeout(() => $('#item-title').focus(), 50);
+}
+
+function toggleUrlField() {
+  $('#item-url-field').style.display = state.itemType === 'note' ? 'none' : 'block';
+}
+
+function saveItem() {
+  const title = $('#item-title').value.trim();
+  const url = $('#item-url').value.trim();
+  const description = $('#item-desc').value.trim();
+  const icon = $('#item-icon').value.trim() || '◈';
+  const color = state.itemColor || COLORS[0];
+
+  if (!title) { toast('Title is required', 'error'); return; }
+  if (state.itemType !== 'note' && !url) { toast('URL is required', 'error'); return; }
+
+  const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+  if (state.editingItem) {
+    const item = tab.items.find(i => i.id === state.editingItem);
+    Object.assign(item, { title, url, description, icon, color, type: state.itemType });
+  } else {
+    tab.items.push({
+      id: uid(), type: state.itemType, title, url, description, icon, color,
+      clicks: 0, pinned: false, addedAt: Date.now(),
+    });
+  }
+  saveDraft();
+  closeModal('item-modal');
+  render();
+  toast(state.editingItem ? 'Item updated' : 'Item added');
+}
+
+function deleteItem(itemId) {
+  const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+  if (!confirm('Delete this item?')) return;
+  tab.items = tab.items.filter(i => i.id !== itemId);
+  saveDraft();
+  render();
+  toast('Item deleted');
+}
+
+function togglePin(itemId) {
+  const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+  const item = tab.items.find(i => i.id === itemId);
+  item.pinned = !item.pinned;
+  saveDraft();
+  render();
+}
+
+// ---------- TAB CRUD ----------
+function openTabModal(tabId) {
+  state.editingTab = tabId;
+  if (tabId) {
+    const tab = state.data.tabs.find(t => t.id === tabId);
+    $('#tab-modal-title').textContent = 'Edit Tab';
+    $('#tab-name').value = tab.name;
+    $('#tab-icon').value = tab.icon || '';
+    $('#tab-icon-preview').textContent = tab.icon || '●';
+    state.tabIcon = tab.icon || '●';
+    $('#tab-delete').style.display = state.data.tabs.length > 1 ? 'inline-flex' : 'none';
+  } else {
+    $('#tab-modal-title').textContent = 'New Tab';
+    $('#tab-name').value = '';
+    $('#tab-icon').value = '';
+    $('#tab-icon-preview').textContent = '⚡';
+    state.tabIcon = '⚡';
+    $('#tab-delete').style.display = 'none';
+  }
+  openModal('tab-modal');
+  setTimeout(() => $('#tab-name').focus(), 50);
+}
+
+function saveTab() {
+  const name = $('#tab-name').value.trim();
+  const icon = $('#tab-icon').value.trim() || '●';
+  if (!name) { toast('Name is required', 'error'); return; }
+  if (state.editingTab) {
+    const tab = state.data.tabs.find(t => t.id === state.editingTab);
+    tab.name = name; tab.icon = icon;
+  } else {
+    const newTab = { id: uid(), name, icon, items: [] };
+    state.data.tabs.push(newTab);
+    state.activeTabId = newTab.id;
+  }
+  saveDraft();
+  closeModal('tab-modal');
+  render();
+  toast(state.editingTab ? 'Tab updated' : 'Tab added');
+}
+
+function deleteTab() {
+  if (state.data.tabs.length <= 1) { toast('Cannot delete last tab', 'error'); return; }
+  if (!confirm('Delete this tab and all its items?')) return;
+  state.data.tabs = state.data.tabs.filter(t => t.id !== state.editingTab);
+  if (state.activeTabId === state.editingTab) state.activeTabId = state.data.tabs[0].id;
+  saveDraft();
+  closeModal('tab-modal');
+  render();
+  toast('Tab deleted');
+}
+
+// ---------- PROFILE ----------
+function openProfileModal() {
+  $('#profile-name').value = state.data.profile.name || '';
+  $('#profile-bio').value = state.data.profile.bio || '';
+  $('#profile-avatar').value = state.data.profile.avatar || '';
+  renderProfileSocials();
+  openModal('profile-modal');
+}
+
+function renderProfileSocials() {
+  const container = $('#profile-socials');
+  container.innerHTML = (state.data.profile.socials || []).map((s, i) => `
+    <div style="display:grid; grid-template-columns: 50px 1fr 2fr 32px; gap:8px; margin-bottom:6px;">
+      <input data-si="${i}" data-sf="icon" class="field-input" value="${escapeHtml(s.icon||'')}" placeholder="◈" style="text-align:center;" />
+      <input data-si="${i}" data-sf="name" class="field-input" value="${escapeHtml(s.name||'')}" placeholder="Name" />
+      <input data-si="${i}" data-sf="url" class="field-input" value="${escapeHtml(s.url||'')}" placeholder="https://" />
+      <button class="btn ghost" data-sr="${i}" style="padding:0; font-size:14px;">×</button>
+    </div>
+  `).join('');
+  $$('[data-sr]', container).forEach(b => b.addEventListener('click', () => {
+    state.data.profile.socials.splice(+b.dataset.sr, 1);
+    renderProfileSocials();
+  }));
+}
+
+function saveProfile() {
+  state.data.profile.name = $('#profile-name').value.trim() || 'You';
+  state.data.profile.bio = $('#profile-bio').value.trim();
+  state.data.profile.avatar = $('#profile-avatar').value.trim();
+  const socials = [];
+  $$('#profile-socials > div').forEach(row => {
+    const icon = $('input[data-sf="icon"]', row).value.trim();
+    const name = $('input[data-sf="name"]', row).value.trim();
+    const url = $('input[data-sf="url"]', row).value.trim();
+    if (name && url) socials.push({ icon: icon || '◈', name, url });
+  });
+  state.data.profile.socials = socials;
+  saveDraft();
+  closeModal('profile-modal');
+  render();
+  toast('Profile saved');
+}
+
+// ---------- SEARCH ----------
+function openSearch() {
+  openModal('search-modal');
+  $('#search-input').value = '';
+  $('#search-input').focus();
+  updateSearch('');
+}
+
+function updateSearch(q) {
+  q = q.toLowerCase().trim();
+  const results = [];
+  if (q) {
+    state.data.tabs.forEach(tab => {
+      tab.items.forEach(item => {
+        const hay = (item.title + ' ' + (item.description||'') + ' ' + (item.url||'') + ' ' + tab.name).toLowerCase();
+        if (hay.includes(q)) results.push({ item, tab });
+      });
+    });
+  }
+  state.searchMatches = results;
+  state.searchSelected = 0;
+  const container = $('#search-results');
+  if (!q) {
+    container.innerHTML = '<div class="search-empty">Start typing to search your links, tabs, and notes.</div>';
+    return;
+  }
+  if (results.length === 0) {
+    container.innerHTML = `<div class="search-empty">No matches for "${escapeHtml(q)}"</div>`;
+    return;
+  }
+  container.innerHTML = results.map((r, i) => `
+    <a class="search-result ${i===0?'selected':''}" data-idx="${i}" ${r.item.url ? `href="${escapeHtml(r.item.url)}" target="_blank" rel="noopener"` : ''}>
+      <div class="search-result-icon" style="color:${r.item.color||'var(--accent)'};">${escapeHtml(r.item.icon||'◈')}</div>
+      <div class="search-result-info">
+        <div class="search-result-title">${escapeHtml(r.item.title)}</div>
+        <div class="search-result-meta">
+          <span class="search-result-tab">${escapeHtml(r.tab.icon)} ${escapeHtml(r.tab.name)}</span>
+          <span>${r.item.url ? escapeHtml(shortenUrl(r.item.url)) : r.item.type.toUpperCase()}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+  $$('#search-results .search-result').forEach(el => {
+    el.addEventListener('mouseenter', () => { state.searchSelected = +el.dataset.idx; updateSearchSelection(); });
+    el.addEventListener('click', () => {
+      const r = state.searchMatches[+el.dataset.idx];
+      if (r && r.tab) state.activeTabId = r.tab.id;
+      if (r && r.item && r.item.type !== 'note' && r.item.url) {
+        r.item.clicks = (r.item.clicks || 0) + 1;
+        saveDraft();
+      }
+      closeModal('search-modal');
+      render();
+    });
+  });
+}
+
+function updateSearchSelection() {
+  $$('#search-results .search-result').forEach((el, i) => {
+    el.classList.toggle('selected', i === state.searchSelected);
+    if (i === state.searchSelected) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+// ---------- COLOR PICKER ----------
+function renderColorPicker(id, active, onPick) {
+  const el = $('#' + id);
+  el.innerHTML = COLORS.map(c => `
+    <div class="color-swatch ${c === active ? 'active' : ''}" style="background:${c}" data-c="${c}"></div>
+  `).join('') + `
+    <label class="color-swatch color-custom" title="Custom color" style="background:transparent;">
+      <span>＋</span>
+      <input type="color" value="${active || '#00e5a0'}" />
+    </label>
+  `;
+  $$('.color-swatch[data-c]', el).forEach(s => {
+    s.addEventListener('click', () => {
+      onPick(s.dataset.c);
+      $$('.color-swatch', el).forEach(x => x.classList.remove('active'));
+      s.classList.add('active');
+    });
+  });
+  $('input[type="color"]', el).addEventListener('input', (e) => {
+    onPick(e.target.value);
+    $$('.color-swatch', el).forEach(x => x.classList.remove('active'));
+    e.target.parentElement.classList.add('active');
+  });
+}
+
+// ---------- SETTINGS ----------
+function openSettings() {
+  renderSettingsAdminOnly();
+  updatePublishCard();
+  renderColorPicker('theme-color-picker', state.data.theme.accent, (c) => {
+    state.data.theme.accent = c;
+    saveDraft();
+    render();
+  });
+  openModal('settings-modal');
+}
+
+// ---------- NOTES ----------
+function openNotes() {
+  closeModal('settings-modal');
+  $('#notes-textarea').value = state.data.notes || '';
+  $('#notes-status').textContent = 'SAVED';
+  openModal('notes-modal');
+  setTimeout(() => $('#notes-textarea').focus(), 50);
+}
+
+function onNotesInput() {
+  $('#notes-status').textContent = 'SAVING…';
+  clearTimeout(state.notesTimer);
+  state.notesTimer = setTimeout(() => {
+    state.data.notes = $('#notes-textarea').value;
+    saveDraft();
+    $('#notes-status').textContent = 'SAVED · ' + new Date().toLocaleTimeString();
+  }, 400);
+}
+
+// ---------- IMPORT / EXPORT ----------
+function exportData() {
+  const payload = { data: state.data, exportedAt: new Date().toISOString() };
+  // Do not export password hash by default
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `command-center-backup-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Backup exported');
+}
+
+function importData() { $('#import-file').click(); }
+
+async function onImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const importedData = parsed.data || parsed; // support old format
+    if (!importedData.tabs || !Array.isArray(importedData.tabs)) throw new Error('Invalid backup');
+    if (!confirm('Import this backup as a draft? Your current state will be replaced.')) return;
+    state.data = importedData;
+    state.activeTabId = importedData.tabs[0] && importedData.tabs[0].id;
+    saveDraft();
+    closeModal('settings-modal');
+    render();
+    toast('Backup imported as draft');
+  } catch (err) {
+    toast('Import failed: ' + err.message, 'error');
+  }
+  e.target.value = '';
+}
+
+// ---------- CHANGE PASSWORD ----------
+async function changePassword() {
+  const cur = $('#cp-current').value;
+  const n1 = $('#cp-new1').value;
+  const n2 = $('#cp-new2').value;
+  const curHash = await sha256(cur);
+  if (curHash !== state.passwordHash) { toast('Current password incorrect', 'error'); return; }
+  if (n1.length < 4) { toast('Password must be at least 4 chars', 'error'); return; }
+  if (n1 !== n2) { toast('Passwords do not match', 'error'); return; }
+  state.passwordHash = await sha256(n1);
+  saveDraft();
+  closeModal('change-password-modal');
+  $('#cp-current').value = $('#cp-new1').value = $('#cp-new2').value = '';
+  toast('Password updated — publish to activate for visitors', 'warn', 4500);
+}
+
+// ---------- PUBLISH ----------
+async function publishSite() {
+  try {
+    let source;
+    try {
+      const res = await fetch(window.location.href, { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch failed');
+      source = await res.text();
+    } catch (fetchErr) {
+      // Fallback for file:// or CORS issues
+      toast('Cannot fetch current source. If viewing via file://, upload to GitHub first or serve with a local server.', 'error', 5500);
+      return;
+    }
+
+    // Strip per-session state before baking in
+    const publishData = JSON.parse(JSON.stringify(state.data));
+
+    const newBlock =
+      '/* BEGIN_PUBLISHED_CONFIG */\n' +
+      'const PUBLISHED_PASSWORD_HASH = ' + JSON.stringify(state.passwordHash) + ';\n' +
+      'const PUBLISHED_DATA = ' + JSON.stringify(publishData, null, 2) + ';\n' +
+      '/* END_PUBLISHED_CONFIG */';
+
+    const re = /\/\* BEGIN_PUBLISHED_CONFIG \*\/[\s\S]*?\/\* END_PUBLISHED_CONFIG \*\//;
+    if (!re.test(source)) {
+      toast('Could not find config markers in source. File may have been modified.', 'error');
+      return;
+    }
+    const newSource = source.replace(re, () => newBlock);
+
+    const blob = new Blob([newSource], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'index.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+
+    // Clear draft — it's now "published" (locally at least)
+    clearDraft();
+    // Refresh published constants in memory so subsequent view shows this as non-draft
+    try {
+      Object.assign(PUBLISHED_DATA, publishData);
+    } catch {}
+    toast('index.html downloaded. Replace it in your GitHub repo to publish to visitors.', 'success', 5000);
+  } catch (e) {
+    toast('Publish failed: ' + e.message, 'error');
+  }
+}
+
+function discardDraft() {
+  if (!confirm('Discard all unpublished changes and revert to the published version?')) return;
+  clearDraft();
+  state.data = JSON.parse(JSON.stringify(PUBLISHED_DATA));
+  state.passwordHash = PUBLISHED_PASSWORD_HASH;
+  state.activeTabId = state.data.tabs[0] && state.data.tabs[0].id;
+  closeModal('settings-modal');
+  render();
+  toast('Draft discarded');
+}
+
+// ---------- MODAL HELPERS ----------
+function openModal(id) { $('#' + id).classList.add('show'); }
+function closeModal(id) { $('#' + id).classList.remove('show'); }
+function closeAllModals() { $$('.modal').forEach(m => m.classList.remove('show')); }
+
+// ---------- SHORTCUTS ----------
+const SHORTCUTS = [
+  ['Search',        ['⌘', 'K']],
+  ['Search',        ['/']],
+  ['Admin mode',    ['Ctrl', 'Shift', 'E']],
+  ['Exit admin',    ['Esc']],
+  ['Settings',      ['Ctrl', ',']],
+  ['Shortcuts',     ['?']],
+  ['Jump to tab',   ['1'], ['2'], ['3'], ['…']],
+  ['Close modal',   ['Esc']],
+  ['New item (admin)', ['N']],
+  ['New tab (admin)',  ['T']],
+];
+
+function renderShortcuts() {
+  $('#shortcuts-grid').innerHTML = SHORTCUTS.map(row => `
+    <div class="shortcut-row">
+      <span class="shortcut-label">${row[0]}</span>
+      <span class="shortcut-keys">${row.slice(1).map(keys => keys.map(k => `<span class="kbd">${k}</span>`).join('')).join('<span style="color:var(--text-ghost); margin:0 4px;">or</span>')}</span>
+    </div>
+  `).join('');
+}
+
+// ---------- INIT ----------
+function init() {
+  renderShortcuts();
+  const draft = loadDraft();
+  if (draft) {
+    state.data = draft.data;
+    state.passwordHash = draft.passwordHash;
+    state.hasDraft = true;
+  } else {
+    state.data = JSON.parse(JSON.stringify(PUBLISHED_DATA));
+    state.passwordHash = PUBLISHED_PASSWORD_HASH;
+    state.hasDraft = false;
+  }
+  state.activeTabId = state.data.tabs[0] && state.data.tabs[0].id;
+  document.body.classList.toggle('has-draft', state.hasDraft);
+  render();
+  wireGlobalHandlers();
+  startClock();
+}
+
+function wireGlobalHandlers() {
+  // Password modal
+  $('#password-submit').addEventListener('click', unlockAdmin);
+  $('#password-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlockAdmin(); });
+
+  // Item modal type picker
+  $$('#item-type-picker .type-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      state.itemType = opt.dataset.type;
+      $$('#item-type-picker .type-option').forEach(o => o.classList.toggle('active', o === opt));
+      toggleUrlField();
+    });
+  });
+  $('#item-icon').addEventListener('input', (e) => {
+    const v = e.target.value.trim() || '◈';
+    $('#item-icon-preview').textContent = v;
+    state.itemIcon = v;
+  });
+  $('#item-save').addEventListener('click', saveItem);
+  $('#item-delete').addEventListener('click', () => {
+    if (!state.editingItem) return;
+    if (!confirm('Delete this item?')) return;
+    const tab = state.data.tabs.find(t => t.id === state.activeTabId);
+    tab.items = tab.items.filter(i => i.id !== state.editingItem);
+    saveDraft();
+    closeModal('item-modal');
+    render();
+    toast('Item deleted');
+  });
+
+  // Tab modal
+  $('#tab-icon').addEventListener('input', (e) => {
+    const v = e.target.value.trim() || '●';
+    $('#tab-icon-preview').textContent = v;
+    state.tabIcon = v;
+  });
+  $('#tab-save').addEventListener('click', saveTab);
+  $('#tab-delete').addEventListener('click', deleteTab);
+
+  // Profile
+  $('#profile-save').addEventListener('click', saveProfile);
+  $('#profile-add-social').addEventListener('click', () => {
+    state.data.profile.socials = state.data.profile.socials || [];
+    state.data.profile.socials.push({ icon: '◈', name: '', url: '' });
+    renderProfileSocials();
+  });
+  $('#profile-socials').addEventListener('input', (e) => {
+    const inp = e.target;
+    if (inp.dataset && inp.dataset.si !== undefined) {
+      const i = +inp.dataset.si;
+      state.data.profile.socials[i][inp.dataset.sf] = inp.value;
+    }
+  });
+
+  // Settings
+  $('#btn-settings').addEventListener('click', openSettings);
+  $('#btn-export').addEventListener('click', exportData);
+  $('#btn-import').addEventListener('click', importData);
+  $('#import-file').addEventListener('change', onImportFile);
+  $('#btn-publish').addEventListener('click', publishSite);
+  $('#btn-discard-draft').addEventListener('click', discardDraft);
+  $('#btn-edit-profile').addEventListener('click', () => { closeModal('settings-modal'); openProfileModal(); });
+  $('#btn-change-password').addEventListener('click', () => { closeModal('settings-modal'); openModal('change-password-modal'); setTimeout(() => $('#cp-current').focus(), 50); });
+  $('#cp-save').addEventListener('click', changePassword);
+  $('#btn-open-notes').addEventListener('click', openNotes);
+
+  // Notes
+  $('#notes-textarea').addEventListener('input', onNotesInput);
+
+  // Shortcuts
+  $('#btn-shortcuts').addEventListener('click', () => openModal('shortcuts-modal'));
+
+  // Lock
+  $('#btn-lock').addEventListener('click', () => {
+    if (state.adminMode) lockAdmin();
+    else { openModal('password-modal'); setTimeout(() => $('#password-input').focus(), 50); }
+  });
+  $('#exit-admin-btn').addEventListener('click', lockAdmin);
+
+  // Close buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.matches('[data-close]') || e.target.closest('[data-close]')) {
+      const modal = e.target.closest('.modal');
+      if (modal) modal.classList.remove('show');
+    }
+  });
+  $$('.modal').forEach(m => {
+    m.addEventListener('click', (e) => {
+      if (e.target === m) m.classList.remove('show');
+    });
+  });
+
+  // Search
+  $('#search-input').addEventListener('input', (e) => updateSearch(e.target.value));
+  $('#search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); state.searchSelected = Math.min(state.searchMatches.length-1, state.searchSelected+1); updateSearchSelection(); }
+    if (e.key === 'ArrowUp')   { e.preventDefault(); state.searchSelected = Math.max(0, state.searchSelected-1); updateSearchSelection(); }
+    if (e.key === 'Enter') {
+      const r = state.searchMatches[state.searchSelected];
+      if (r) {
+        state.activeTabId = r.tab.id;
+        if (r.item.type !== 'note' && r.item.url) {
+          r.item.clicks = (r.item.clicks || 0) + 1;
+          saveDraft();
+          window.open(r.item.url, '_blank');
+        }
+        closeModal('search-modal');
+        render();
+      }
+    }
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    const inField = ['INPUT', 'TEXTAREA'].includes((document.activeElement || {}).tagName);
+    const anyOpen = $$('.modal.show').length > 0;
+
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+      e.preventDefault();
+      if (state.adminMode) lockAdmin();
+      else { openModal('password-modal'); setTimeout(() => $('#password-input').focus(), 50); }
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (anyOpen) closeAllModals();
+      openSearch();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === ',') {
+      e.preventDefault();
+      openSettings();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (anyOpen) closeAllModals();
+      else if (state.adminMode) lockAdmin();
+      return;
+    }
+    if (inField) return;
+
+    if (e.key === '/') { e.preventDefault(); openSearch(); return; }
+    if (e.key === '?') { e.preventDefault(); openModal('shortcuts-modal'); return; }
+    if (/^[1-9]$/.test(e.key)) {
+      const idx = +e.key - 1;
+      if (state.data && state.data.tabs[idx]) {
+        state.activeTabId = state.data.tabs[idx].id;
+        render();
+      }
+      return;
+    }
+    if (state.adminMode) {
+      if (e.key.toLowerCase() === 'n') { e.preventDefault(); openItemModal(null); return; }
+      if (e.key.toLowerCase() === 't') { e.preventDefault(); openTabModal(null); return; }
+    }
+  });
+}
+
+function startClock() {
+  const el = $('#clock');
+  const tick = () => {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    el.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+init();
+</script>
+</body>
+</html>
